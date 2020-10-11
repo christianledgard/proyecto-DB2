@@ -1,0 +1,5 @@
+/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/build-ProyectoInterfaz-Desktop_Qt_5_15_1_clang_64bit-Debug/CMakeFiles/rebuild_cache.dir
+/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/build-ProyectoInterfaz-Desktop_Qt_5_15_1_clang_64bit-Debug/CMakeFiles/edit_cache.dir
+/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/build-ProyectoInterfaz-Desktop_Qt_5_15_1_clang_64bit-Debug/CMakeFiles/ProyectoInterfaz.dir
+/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/build-ProyectoInterfaz-Desktop_Qt_5_15_1_clang_64bit-Debug/CMakeFiles/ProyectoInterfaz_autogen_timestamp_deps.dir
+/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/build-ProyectoInterfaz-Desktop_Qt_5_15_1_clang_64bit-Debug/CMakeFiles/ProyectoInterfaz_autogen.dir
