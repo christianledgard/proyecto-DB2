@@ -1,0 +1,42 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/fabrizio/Documents/UTEC/Base de Datos 2/proyecto-DB2/HASH/Bucket.cpp
+string
+-
+map
+-
+fstream
+-
+utility
+-
+functions.cpp
+/home/fabrizio/Documents/UTEC/Base de Datos 2/proyecto-DB2/HASH/functions.cpp
+
+/home/fabrizio/Documents/UTEC/Base de Datos 2/proyecto-DB2/HASH/ExtendibleHashing.cpp
+bitset
+-
+iostream
+-
+cmath
+-
+bits/stdc++.h
+-
+Bucket.cpp
+/home/fabrizio/Documents/UTEC/Base de Datos 2/proyecto-DB2/HASH/Bucket.cpp
+Record.cpp
+/home/fabrizio/Documents/UTEC/Base de Datos 2/proyecto-DB2/HASH/Record.cpp
+
+/home/fabrizio/Documents/UTEC/Base de Datos 2/proyecto-DB2/HASH/Record.cpp
+
+/home/fabrizio/Documents/UTEC/Base de Datos 2/proyecto-DB2/HASH/functions.cpp
+string
+-
+fstream
+-
+
