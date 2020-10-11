@@ -4,7 +4,6 @@ struct Record{
     long prevDelete;
 };
 
-
 template <typename KeyType>
 struct Player: public Record<KeyType>{
     char surname[20];
@@ -15,7 +14,6 @@ struct Player: public Record<KeyType>{
 
 template <typename KeyType>
 struct Team: public Record<KeyType>{
-
     char team[20];
     long ranking, games, wins, draws, losses, goalsFor,
     goalsAgainst, yellowCards, redCards;

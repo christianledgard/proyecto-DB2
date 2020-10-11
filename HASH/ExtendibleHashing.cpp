@@ -1,7 +1,7 @@
 #include <bitset>
 #include <iostream>
 
-#include "Node.cpp"
+#include "Bucket.cpp"
 #include "Record.cpp"
 
 template <typename KeyType>
@@ -18,7 +18,7 @@ string HashFunction(KeyType key, int length){
     }
 }
 
-
+///////////////////////////////////////////////////
 
 template <typename RecordType>
 struct ExtendibleHash{
@@ -38,25 +38,12 @@ public:
         string bucketLabel = HashFunction(ID,globalDepth);
         ifstream bucketFile;
         bucketFile.open(bucketLabel+".dat", ios::binary |ios::in);
-        KeyType read; long logicalPosition; bool flag=false;
-        while(bucketFile.read((char*)&read,sizeof(KeyType))){
-            bucketFile.read((char*)&logicalPosition,sizeof(long));
-            if(read==ID){
-                flag=true;
-                break;
-            }
-        }
-        if(flag){
-            auto record = new RecordType();
-            ifstream datafile;
-            datafile.open("datafile.dat", ios::binary |ios::in);
-            datafile.seekg(logicalPosition*sizeof(RecordType),ios::beg);
-            datafile.read((char*)&record,sizeof(RecordType));
-            return record;
-        }
-        else{
-            return nullptr;
-        }
+        bucketFile.seekg(sizeof(int),ios::beg);
+        auto record = new RecordType();
+        while(bucketFile.read((char*)&record,sizeof(RecordType)))
+            if(record.ID==ID)
+                return record;
+        return nullptr;
     }
 
     bool insert(RecordType record){
