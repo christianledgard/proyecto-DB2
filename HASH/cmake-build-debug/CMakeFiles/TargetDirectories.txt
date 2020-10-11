@@ -1,0 +1,3 @@
+/home/fabrizio/Documents/UTEC/Base de Datos 2/proyecto-DB2/HASH/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/fabrizio/Documents/UTEC/Base de Datos 2/proyecto-DB2/HASH/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/fabrizio/Documents/UTEC/Base de Datos 2/proyecto-DB2/HASH/cmake-build-debug/CMakeFiles/proyecto_DB2.dir
