@@ -95,17 +95,5 @@ void Players() {
 }
 
 int main(){
-
     Teams(); Players();
-
-
-    std::ifstream file("Teams.bin", std::ios::binary);
-    Team<long> registro = Team<long>();
-    std::vector<Team<long>> registros;
-    while (file.read((char *) &registro, sizeof(Team<long>))){
-        registros.push_back(registro);
-    }
-    for (auto& it : registros) {
-        cout << it.ID << endl;
-    }
 }
