@@ -154,42 +154,65 @@ private:
 
         temp.close(); file.close();
         string oldname= "temp.dat";
-        //remove(hashFile.c_str());
         rename(oldname.c_str(),hashFile.c_str());
     }
 
-public:
-    explicit ExtendibleHash(string hashFile):hashFile(move(hashFile)){
-        if(exists(hashFile)){
-            ifstream file;
-            file.open(hashFile,ios::binary |ios::in);
-            file.read((char*)&globalDepth,sizeof(long));
-            file.read((char*)&blockFactor,sizeof(long));
-            file.close();
+
+    void rebuildColapse(){
+        fstream file,temp;
+
+        file.open(hashFile,ios::binary |ios::out |ios::in);
+        temp.open("temp.dat",ios::binary |ios::out);
+        --globalDepth;
+
+        file.seekg(sizeof(long)*2,ios::beg);
+
+        temp.write((char*)&globalDepth,sizeof(long));
+        temp.write((char*)&blockFactor,sizeof(long));
+
+        string index;
+        long localDepth;
+
+        for(int i=0;i<pow(2,globalDepth);++i){
+            file.seekg(sizeof(char)*(globalDepth+1),ios::cur);
+            file.read((char*)&localDepth,sizeof(long));
+
+            index=HashFunction(i,globalDepth);
+            char array[globalDepth];
+            strcpy(array, index.c_str());
+
+            temp.write((char*)&array,sizeof(char)*globalDepth);
+            temp.write((char*)&localDepth,sizeof(long));
         }
-        else{
-            throw out_of_range("Este constuctor es para Hashes existentes, indique blockFactor y globalDepth inicial");
-        }
+
+        temp.close(); file.close();
+        string oldname= "temp.dat";
+        rename(oldname.c_str(),hashFile.c_str());
     }
 
+    void safeAddAfterSplit(RecordType &record, string &hashValue, unsigned long decimal, fstream &file, long &localDepth,
+                      string &bucketName) const {
+        hashValue=HashFunction(record.ID, globalDepth);
+        decimal = bitset<64>(hashValue).to_ulong();
+        file.open(hashFile, ios::binary | ios::in);
+        file.seekg(sizeof(long)*2 + (sizeof(char) * globalDepth + sizeof(long)) * decimal + sizeof(char) * globalDepth, ios::beg);
+        file.read((char*)&localDepth,sizeof(long));
+        file.close();
 
-    ExtendibleHash(long globalDepth, long blockFactor,const string& hashFile):
-    globalDepth(globalDepth), blockFactor(blockFactor), hashFile(hashFile){
-        if(!exists(hashFile)){
-            fstream file;
-            file.open(hashFile,ios::binary |ios::out);
-            file.write((char*)&globalDepth,sizeof(long));
-            file.write((char*)&blockFactor,sizeof(long));
-            writeIndixes( file,1);
-            file.close();
-            createInitialBuckets();
-        }
-        else{
-            throw out_of_range("Este constuctor es para Hashes nuevos, solo cargue el archivo hash");
-        }
+        fstream bucketFile2;
+        bucketName= hashValue.substr(globalDepth - localDepth, globalDepth);
+        bucketFile2.open(bucketName+".dat",ios::binary |ios::in| ios::out);
+        long size2;
+        bucketFile2.read((char*)&size2,sizeof(long));
+        ++size2;
+        bucketFile2.seekg(0,ios::beg);
+        bucketFile2.write((char*)&size2,sizeof(long));
+        bucketFile2.seekg((size2-1)*sizeof(RecordType),ios::cur);
+        bucketFile2.write((char*)&record,sizeof(RecordType));
+        bucketFile2.close();
     }
 
-    RecordType* searchRecord(KeyType ID){
+    pair<RecordType*,string>getRecordAndBuffer(KeyType ID){
         string bucketLabel = HashFunction(ID,globalDepth);
         unsigned long decimal = bitset<64>(bucketLabel).to_ulong();
         fstream file;
@@ -206,12 +229,69 @@ public:
         auto record = new RecordType();
         while(bucketFile.read((char*)&(*record),sizeof(RecordType)))
             if(record->ID==ID)
-                return record;
-        return nullptr;
+                return make_pair(record,bucketName);
+        return make_pair(nullptr,bucketName);
+    }
+
+    pair<bool,pair<string,string>> getcontextBuddy(const string&key){
+        string hashValue=HashFunction(key,globalDepth);
+        string buddyHashValue=getBuddy(hashValue);
+        unsigned long decimal = bitset<64>(hashValue).to_ulong();
+        unsigned long decimalBuddy = bitset<64>(buddyHashValue).to_ulong();
+        fstream file;
+        file.open(hashFile,ios::binary |ios::in);
+        file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
+        long localDepth,localDepthBuddy;
+        file.read((char*)&localDepth,sizeof(long));
+        file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
+        file.read((char*)&localDepthBuddy,sizeof(long));
+        file.close();
+
+        string bucketName= hashValue.substr(globalDepth-localDepth,globalDepth);
+        string bucketBuddyName= buddyHashValue.substr(globalDepth-localDepthBuddy,globalDepth);
+
+        return make_pair(bucketName!=bucketBuddyName,make_pair(bucketName,bucketBuddyName));
+    }
+
+public:
+    explicit ExtendibleHash(string hashFile):hashFile(move(hashFile)){
+        if(existsFile(hashFile)){
+            ifstream file;
+            file.open(hashFile,ios::binary |ios::in);
+            file.read((char*)&globalDepth,sizeof(long));
+            file.read((char*)&blockFactor,sizeof(long));
+            file.close();
+        }
+        else{
+            throw out_of_range("Este constuctor es para Hashes existentes, indique blockFactor y globalDepth inicial");
+        }
+    }
+
+
+    ExtendibleHash(long globalDepth, long blockFactor,const string& hashFile):
+    globalDepth(globalDepth), blockFactor(blockFactor), hashFile(hashFile){
+        if(!existsFile(hashFile)){
+            fstream file;
+            file.open(hashFile,ios::binary |ios::out);
+            file.write((char*)&globalDepth,sizeof(long));
+            file.write((char*)&blockFactor,sizeof(long));
+            writeIndixes( file,1);
+            file.close();
+            createInitialBuckets();
+        }
+        else{
+            throw out_of_range("Este constuctor es para Hashes nuevos, solo cargue el archivo hash");
+        }
+    }
+
+
+    RecordType* searchRecord(KeyType ID){
+        return getRecordAndBuffer(ID).first;
     }
 
     bool insertRecord(RecordType record){
-        if(searchRecord(record.ID) == nullptr){
+        pair<RecordType*,string> recordAndBuffer=getRecordAndBuffer(record.ID);
+        if(recordAndBuffer.first == nullptr){
             string hashValue=HashFunction(record.ID,globalDepth);
             unsigned long decimal = bitset<64>(hashValue).to_ulong();
             fstream file;
@@ -240,25 +320,7 @@ public:
                 if(localDepth==globalDepth)
                     rebuildIndexFile();
                 splitBucket(localDepth, bucketName);
-
-                hashValue=HashFunction(record.ID,globalDepth);
-                decimal = bitset<64>(hashValue).to_ulong();
-                file.open(hashFile,ios::binary |ios::in);
-                file.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
-                file.read((char*)&localDepth,sizeof(long));
-                file.close();
-
-                fstream bucketFile2;
-                bucketName= hashValue.substr(globalDepth-localDepth,globalDepth);
-                bucketFile2.open(bucketName+".dat",ios::binary |ios::in| ios::out);
-                long size2;
-                bucketFile2.read((char*)&size2,sizeof(long));
-                ++size2;
-                bucketFile2.seekg(0,ios::beg);
-                bucketFile2.write((char*)&size2,sizeof(long));
-                bucketFile2.seekg((size2-1)*sizeof(RecordType),ios::cur);
-                bucketFile2.write((char*)&record,sizeof(RecordType));
-                bucketFile2.close();
+                safeAddAfterSplit(record, hashValue, decimal, file, localDepth, bucketName);
             }
             return true;
         }
@@ -267,26 +329,105 @@ public:
         }
     }
 
+
+    string getBuddy(const string& hashValue){
+        string buddy=hashValue;
+        if(buddy[0]=='0')
+            buddy[0]='1';
+        else
+            buddy[0]='0';
+        return buddy;
+    }
+
+
+    bool hasBuddy(const string& key){
+        return getcontextBuddy(key).first;
+    }
+
+    bool collapse(){
+        ///TODO COLLAPSE
+        bool canColapse=false;
+        if(globalDepth>1){
+            canColapse=true;
+            long halfSize= pow(2,globalDepth)/2;
+            fstream file;
+            file.open(hashFile,ios::binary |ios::in);
+
+            char hashValue[globalDepth], buddyHashValue[globalDepth];
+            for(long i=0;i<halfSize;++i){
+                file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*i,ios::beg);
+                long localDepth,localDepthBuddy;
+                file.read((char*)&hashValue,+ sizeof(char)*globalDepth);
+                file.read((char*)&localDepth,sizeof(long));
+                file.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*i+pow(2,globalDepth-1),ios::beg);
+                file.read((char*)&buddyHashValue,+ sizeof(char)*globalDepth);
+                file.read((char*)&localDepthBuddy,sizeof(long));
+
+                string bucketName= hashValue.substr(globalDepth-localDepth,globalDepth);
+                string bucketBuddyName= buddyHashValue.substr(globalDepth-localDepthBuddy,globalDepth);
+
+                if(bucketBuddyName!=bucketName){
+                    canColapse= false;
+                    return canColapse;
+                }
+            }
+            rebuildColapse();
+        }
+        return canColapse;
+    }
+
+
+    void tryCombine(const string& key){
+        auto contextBuddy=getcontextBuddy(key);
+        if(contextBuddy.first){
+
+            string bucketName,buddyBuckeyName;
+            fstream bucketFile,buddyBucketFile;
+
+            bucketFile.open(bucketName+".dat",ios::binary |ios::in| ios::out);
+            buddyBucketFile.open(buddyBuckeyName+".dat",ios::binary |ios::in| ios::out);
+
+            long size,sizeBuddy;
+            bucketFile.read((char*)&size,sizeof(long));
+            buddyBucketFile.read((char*)&sizeBuddy,sizeof(long));
+
+            if(size+sizeBuddy<=blockFactor){
+                ///TODO MERGE BUCKET
+                if(collapse()){
+                    tryCombine(key);
+                }
+            }
+        }
+    }
+
+    void deleteRecordFromFile(const string& key){
+
+    }
+
     bool removeRecord(KeyType key){
-//        if(searchRecord(record.ID)==nullptr){
-//            ///TODO REMOVE LOGIC
-//            return true;
-//        }
-//        else{
-//            return false;
-//        }
+        pair<RecordType*,string> recordAndBuffer=getRecordAndBuffer(key);
+        if(recordAndBuffer.first!=nullptr){
+            ///TODO deleteRecordFromFile(key);
+            tryCombine(key);
+            return true;
+        }
+        else{
+            return false;
+        }
     }
     ~ExtendibleHash()=default;
 };
 
 int main(){
-    remove("00.dat");
-    remove("0.dat");
-    remove("10.dat");
+    remove("000.dat");
     remove("1.dat");
-    remove("temp.dat");
+    remove("010.dat");
+    remove("100.dat");
+    remove("110.dat");
     remove("test.dat");
     ExtendibleHash<Record<long>> hash(1,3,"test.dat");
+   // ExtendibleHash<Player<long>> hashPlayer(1,1,"player.dat");
+
     hash.insertRecord(Record<long>(16));
     hash.insertRecord(Record<long>(4));
     hash.insertRecord(Record<long>(6));
@@ -300,3 +441,4 @@ int main(){
     hash.insertRecord(Record<long>(26));
     return 0;
 }
+
