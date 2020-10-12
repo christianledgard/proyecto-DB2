@@ -27,6 +27,8 @@ struct Player : public Record<Key> {
         std::strcpy(this->position,position.c_str());
     }
 
+    Player() {}
+
     bool operator < (const Player<Key> &r1) const {
         std::string r1Surname(r1.surname);
         return this->surname < r1Surname;
@@ -58,6 +60,8 @@ struct Team : public Record<Key> {
         yellowCards(yellowCards), redCards(redCards) {
         std::strcpy(this->team,team.c_str());
     }
+
+    Team() {}
 
     bool operator < (const Team<Key> &r1) const {
         std::string r1Team(r1.team);

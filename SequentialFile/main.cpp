@@ -13,7 +13,7 @@ int main() {
     //shortPrintTeams(teams);
 
     for (Team<long> team : teams) {
-        Team<long> foundTeam = teamsSequentialFile.searchInOrderedRegisters(team.ID);
+        Team<long> foundTeam = teamsSequentialFile.searchInOrderedRecords(team.ID);
         foundTeam.shortPrint();
     }
     
