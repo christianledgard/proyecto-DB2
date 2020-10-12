@@ -8,23 +8,19 @@ using namespace std;
 template <typename RecordType>
 struct Bucket{
     string label;
-    int size=0;
-    int localDepth;
+    long size=0;
 
-    Bucket(string label, int globalDepth, int blockFactor):
-    label(std::move(label)){
+    Bucket(const string& label, long globalDepth, long blockFactor):
+    label(label){
         fstream file;
         if(exists(label+".dat")){
             file.open(label+".dat",ios::binary |ios::in);
-            file.read((char*)&size,sizeof(int));
-            file.read((char*)&localDepth,sizeof(int));
+            file.read((char*)&size,sizeof(long));
             file.close();
         }
         else{
             file.open(label+".dat",ios::binary | ios::out);
-            localDepth=1;
-            file.write((char *)size, sizeof(int));
-            file.write((char *)localDepth, sizeof(int));
+            file.write((char *)size, sizeof(long));
             file.close();
         }
     }
