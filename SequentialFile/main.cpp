@@ -8,14 +8,14 @@ int main() {
 
     SequentialFile<Team<long> > teamsSequentialFile = SequentialFile<Team<long> >("data/Teams.bin", "data/TeamsSequentialFile.bin");
 
-    std::vector<Team<long> > teams = teamsSequentialFile.load();
 
     //shortPrintTeams(teams);
 
-    for (Team<long> team : teams) {
-        Team<long> foundTeam = teamsSequentialFile.searchInOrderedRecords(team.ID);
-        foundTeam.shortPrint();
-    }
+    teamsSequentialFile.insert(Team<long>(100, "Jesus", 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    std::vector<Team<long> > teams = teamsSequentialFile.load();
+
+    shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
+
     
     return 0;
 }

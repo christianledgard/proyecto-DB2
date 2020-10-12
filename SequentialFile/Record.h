@@ -54,11 +54,12 @@ struct Team : public Record<Key> {
     goalsAgainst, yellowCards, redCards;
     long next, prev;
 
-    Team(const std::string& team, long ranking, long games, long wins, long draws, long losses, 
+    Team(Key ID, const std::string& team, long ranking, long games, long wins, long draws, long losses, 
         long goalsFor, long goalsAgainst, long yellowCards, long redCards) : ranking(ranking), games(games), 
         wins(wins), draws(draws), losses(losses), goalsFor(goalsFor), goalsAgainst(goalsAgainst), 
         yellowCards(yellowCards), redCards(redCards) {
-        std::strcpy(this->team,team.c_str());
+            this->ID = ID;
+            std::strcpy(this->team,team.c_str());
     }
 
     Team() {}
