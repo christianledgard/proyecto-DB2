@@ -17,7 +17,67 @@ En primer lugar esperamos obtener un tiempo de búsqueda menor en la estructura 
 # Fundamente y describa las técnicas.
 
 - Describa brevemente las técnicas de indexación de archivos que ha elegido. Explique procedimentalmente el proceso de inserción, eliminación y búsqueda.
-- Detalle los aspectos importantes de la implementación de dichas técnicas.
+
+## Sequencial File
+
+### Inserción
+
+![Inserción Sequencial File](https://i.ibb.co/9chv09W/Captura-de-Pantalla-2020-10-12-a-la-s-14-05-39.png)
+
+![](https://i.ibb.co/swjb0cd/Captura-de-Pantalla-2020-10-12-a-la-s-14-10-37.png)
+
+### Eliminación
+![](https://i.ibb.co/7Vyv89y/Captura-de-Pantalla-2020-10-12-a-la-s-14-17-16.png)
+
+![](https://i.ibb.co/z6q7bpr/Captura-de-Pantalla-2020-10-12-a-la-s-14-18-20.png)
+
+### Búsqueda
+
+![](https://i.ibb.co/Gv46N7p/Captura-de-Pantalla-2020-10-12-a-la-s-14-15-31.png)
+
+## Extendible Hashing
+
+### Inserción
+
+Para los casos de inserrción, un punto muy importante a tener en cuenta son los casos de **overflow**. Estos ocurren cuando queremos insertar un elemento en un bucket que esta lleno (el factor de bloque es igual a la cantidad de elementos). En este caso, cuando ocurre overflow, tenemos que realizar un split y expansión como observamos a continuación:
+
+![](https://i.ibb.co/JdQbHmx/Captura-de-Pantalla-2020-10-12-a-la-s-15-41-20.png)
+
+![](https://i.ibb.co/92VQD20/Captura-de-Pantalla-2020-10-12-a-la-s-15-41-25.png)
+
+### Eliminación
+
+Para realizar el algorítmo de eliminación seguimos el siguiente Pseudocódigo adaptado de Folk, Zoellick and Riccardi (1998). 
+
+```
+eliminar(key):
+    key = search(key);
+    if key.notFound(): return;
+    else
+    {
+        remove key from bucket;
+        tryCombine(bucket);
+    }
+    
+tryCombine(bucket):
+    if(bucket a tiene bucket hermano b)
+    {
+        if(a.numkeys + b.numkeys)
+        {
+            combine buckets a y b en a;
+            try to collapse the directory;
+            if(directory was collapsed)
+            {
+                tryCombine(a);
+            }
+        }
+    }
+
+```
+
+
+### Búsqueda
+
 - Debe notarse con claridad el manejo de la memoria secundaria.
 - Describa como realizó la simulación de transacciones. Explique el uso de hilos para la ejecución en paralelo de transacciones.
 
