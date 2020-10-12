@@ -74,7 +74,7 @@ private:
         sequentialFileIn.read((char *) &baseRecordNext, sizeof(RecordType));
         sequentialFileIn.close();
 
-        long currentRecordLogPos = totalOrderedRecords + totalUnorderedRecords;
+        long currentRecordLogPos = this->findWhereToInsert();
         long baseRecordLogPos = baseRecordNext.prev;
         long baseRecordNextLogPos = baseRecord.next;
 
@@ -109,7 +109,7 @@ private:
         // get logical position of currentRecord
         long currentRecLogPos = prevRecord.next;
         // calculate logical position of toInsert
-        long toInsertLogPos = totalOrderedRecords + totalUnorderedRecords;
+        long toInsertLogPos = this->findWhereToInsert();
 
         // update prevRecord.next
         prevRecord.next = toInsertLogPos;
@@ -143,8 +143,10 @@ private:
         sequentialFileIn.read((char *) &firstRecordNext, sizeof(RecordType));
         sequentialFileIn.close();
 
-        record.next = totalOrderedRecords + totalUnorderedRecords;
-        firstRecordNext.prev = totalOrderedRecords + totalUnorderedRecords;
+        long toInsertLogPos = this->findWhereToInsert();
+
+        record.next = toInsertLogPos;
+        firstRecordNext.prev = toInsertLogPos;
         record.prev = -1;
 
         firstRecord.prev = 0;
@@ -154,7 +156,7 @@ private:
         sequentialFileOut.seekp(0);
         sequentialFileOut.write((char *) &record, sizeof(RecordType));
 
-        sequentialFileOut.seekp((totalOrderedRecords + totalUnorderedRecords) * sizeof(RecordType));
+        sequentialFileOut.seekp((toInsertLogPos) * sizeof(RecordType));
         sequentialFileOut.write((char *) &firstRecord, sizeof(RecordType));
 
         sequentialFileOut.seekp(firstRecord.next * sizeof(RecordType));
@@ -174,14 +176,16 @@ private:
         record.next = -2;
         record.prev = totalOrderedRecords - 1;
 
-        lastRecord.next = totalOrderedRecords + totalUnorderedRecords;
+        long toInsertLogPos = this->findWhereToInsert();
+
+        lastRecord.next = toInsertLogPos;
 
         std::fstream sequentialFileOut(this->sequentialFileName);
 
         sequentialFileOut.seekp((totalOrderedRecords - 1) * sizeof(RecordType));
         sequentialFileOut.write((char *) &lastRecord, sizeof(RecordType));
 
-        sequentialFileOut.seekp((totalOrderedRecords + totalUnorderedRecords) * sizeof(RecordType));
+        sequentialFileOut.seekp((toInsertLogPos) * sizeof(RecordType));
         sequentialFileOut.write((char *) &record, sizeof(RecordType));
 
         sequentialFileOut.close();
@@ -198,14 +202,16 @@ private:
         record.next = -2;
         record.prev = currentRecordPrev.next;
 
-        current.next = totalOrderedRecords + totalUnorderedRecords;
+        long toInsertLogPos = this->findWhereToInsert();
+
+        current.next = toInsertLogPos;
 
         std::fstream sequentialFileOut(this->sequentialFileName);
 
         sequentialFileOut.seekp(currentRecordPrev.next * sizeof(RecordType));
         sequentialFileOut.write((char *) &current, sizeof(RecordType));
 
-        sequentialFileOut.seekp((totalOrderedRecords + totalUnorderedRecords) * sizeof(RecordType));
+        sequentialFileOut.seekp((toInsertLogPos) * sizeof(RecordType));
         sequentialFileOut.write((char *) &record, sizeof(RecordType));
 
         sequentialFileOut.close();
@@ -382,6 +388,34 @@ private:
             sequentialFile.read((char *) &prevRecord, sizeof(RecordType));
             return prevRecord.next;
         }
+    }
+
+    // finds where to insert in unordered records, considering free list
+    long findWhereToInsert() {
+        long currentHeader = readHeader();
+        if (currentHeader == -1) {
+            return totalOrderedRecords + totalUnorderedRecords;
+        } else {
+            RecordType deleted = read(this->sequentialFileName, currentHeader);
+            writeHeader(deleted.next);
+            return currentHeader;
+        }
+    }
+
+    RecordType read(std::string fileName, long position) {
+        std::fstream file(fileName);
+        RecordType record;
+        file.seekg(position * sizeof(RecordType));
+        file.read((char *) &record, sizeof(RecordType));
+        file.close();
+        return record;
+    }
+
+    void write(RecordType record, std::string fileName, long position) {
+        std::fstream file(fileName);
+        file.seekp(position * sizeof(RecordType));
+        file.write((char *) &record, sizeof(RecordType));
+        file.close();
     }
 
 public:

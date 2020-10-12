@@ -78,5 +78,30 @@ int main() {
     printMessage("Borrando a San Marino");
     deleteAndPrint(750, teamsSequentialFile);
 
+    printMessage("Agregando registros a sección no ordenada con free list\nInsertando a Corea del Norte");
+    teamsSequentialFile.insert(Team<long>(700, "Corea del Norte", 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    teams = teamsSequentialFile.load();
+    shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
+
+    printMessage("Insertando a Mongolia");
+    teamsSequentialFile.insert(Team<long>(380, "Mongolia", 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    teams = teamsSequentialFile.load();
+    shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
+
+    printMessage("Insertando a Tanzania");
+    teamsSequentialFile.insert(Team<long>(590, "Tanzania", 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    teams = teamsSequentialFile.load();
+    shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
+
+    printMessage("Insertando a Madagascar");
+    teamsSequentialFile.insert(Team<long>(590, "Madagascar", 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    teams = teamsSequentialFile.load();
+    shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
+
+    printMessage("Insertando a Mongolia\nTercera reconstrucción");
+    teamsSequentialFile.insert(Team<long>(845, "Mongolia", 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    teams = teamsSequentialFile.load();
+    shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
+
     return 0;
 }
