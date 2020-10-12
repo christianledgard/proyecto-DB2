@@ -26,6 +26,8 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+    SequentialFile<Team<long>> teamsSequentialFile;
+    SequentialFile<Team<long>> playersSequentialFile;
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -34,6 +36,7 @@ public:
     void refresh(QTableWidget *tableWidget, std::string fileName);
     void refreshFromBinaryPlayer(QTableWidget *tableWidget, std::string fileName);
     void refreshFromBinaryTeams(QTableWidget *tableWidget, std::string fileName);
+
 
 private slots:
     void on_recargar_clicked();
