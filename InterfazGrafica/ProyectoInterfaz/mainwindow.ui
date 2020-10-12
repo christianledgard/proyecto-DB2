@@ -19,9 +19,18 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
+     <layout class="QGridLayout" name="gridLayout"/>
+    </item>
+    <item>
      <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,20">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0">
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="5,0,0,1">
+        <property name="spacing">
+         <number>4</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <widget class="QPlainTextEdit" name="consulta"/>
         </item>
@@ -33,9 +42,19 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="pushButtonHash">
+          <property name="text">
+           <string>Ejecutar Consulta HASH</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="recargar">
           <property name="text">
            <string>Recargar</string>
+          </property>
+          <property name="checkable">
+           <bool>false</bool>
           </property>
          </widget>
         </item>

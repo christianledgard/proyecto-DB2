@@ -6,8 +6,9 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     this->teamsSequentialFile = SequentialFile<Team<long>>("/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/Teams.bin", "/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/TeamsSequentialFile.bin");
-    this->playersSequentialFile = SequentialFile<Team<long>>("/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/Players.bin", "/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/PlayersSequentialFile.bin");
+    this->playersSequentialFile = SequentialFile<Player<long>>("/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/Players.bin", "/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/PlayersSequentialFile.bin");
     ui->setupUi(this);
+    this->on_recargar_clicked();
 }
 
 MainWindow::~MainWindow()
@@ -81,8 +82,6 @@ void MainWindow::refreshFromBinaryPlayer(QTableWidget *tableWidget, std::string 
     tableWidget->setHorizontalHeaderItem(10,new QTableWidgetItem("prev"));
 
     for (auto& it : registros) {
-        qDebug() << it.ID;
-        qDebug() << it.surname;
         tableWidget->insertRow(tableWidget->rowCount());
         tableWidget->setItem(tableWidget->rowCount()-1, 0, new QTableWidgetItem(QString::number(it.ID)));
         tableWidget->setItem(tableWidget->rowCount()-1, 1, new QTableWidgetItem(it.surname));
@@ -240,5 +239,68 @@ void MainWindow::on_pushButton_clicked()
         errorDeFormato.setText("Error en el método SELECT, DELETE o INSERT.");
         errorDeFormato.exec();
     }
+
+}
+
+void MainWindow::on_pushButtonHash_clicked()
+{
+
+    QMessageBox errorDeFormato;
+    errorDeFormato.setText("Error en el input.");
+
+
+    if(ui->consulta->toPlainText().isEmpty()){
+        errorDeFormato.setText("Ingresar una consulta antes de continuar.");
+        errorDeFormato.exec();
+        return;
+    }
+
+    std::string s = ui->consulta->toPlainText().toUtf8().constData();
+
+    std::istringstream iss(s);
+    std::vector<std::string> results(std::istream_iterator<std::string>{iss},
+                                     std::istream_iterator<std::string>());
+
+
+    if(results[0]=="SELECT"){
+        qDebug() << "SELECT";
+
+        if(results[3]=="players"){
+            qDebug() << "players";
+        }else if(results[3]=="teams"){
+            qDebug() << "teams";
+        } else {
+            errorDeFormato.setText("Error en el nombre de la tabla.");
+            errorDeFormato.exec();
+        }
+
+
+    }else if(results[0]=="DELETE"){
+        qDebug() << "DELETE";
+
+        if(results[2]=="players"){
+            qDebug() << "players";
+        }else if(results[2]=="teams"){
+            qDebug() << "teams";
+        } else {
+            errorDeFormato.setText("Error en el nombre de la tabla.");
+            errorDeFormato.exec();
+        }
+
+    }else if(results[0]=="INSERT"){
+        if(results[2]=="players"){
+            qDebug() << "players";
+        }else if(results[2]=="teams"){
+
+        } else {
+            errorDeFormato.setText("Error en el nombre de la tabla.");
+            errorDeFormato.exec();
+        }
+
+    } else {
+        errorDeFormato.setText("Error en el método SELECT, DELETE o INSERT.");
+        errorDeFormato.exec();
+    }
+
 
 }

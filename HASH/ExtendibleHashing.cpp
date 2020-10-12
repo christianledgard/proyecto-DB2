@@ -62,14 +62,14 @@ private:
         one.close();
     }
     void updatePointersofIndixes(string const& bucketName, long localDepth){
-        long prevDepth=globalDepth-(localDepth+1);
+        long prevDepth=globalDepth-localDepth;
         fstream hash;
-        hash.open(hashFile,ios::binary |ios::out);
+        hash.open(hashFile,ios::binary |ios::out|ios::in);
         for(int i=0;i<pow(2,prevDepth);++i){
             string binaryPrev=HashFunction(i,prevDepth);
             string binaryNumber=binaryPrev+bucketName;
             unsigned long decimal = bitset<64>(binaryNumber).to_ulong();
-            hash.seekg(sizeof(long)*2+(sizeof(globalDepth)+sizeof(long))*decimal+ sizeof(globalDepth),ios::beg);
+            hash.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
             long newPointer=localDepth+1;
             hash.write((char*)& newPointer,sizeof(long));
         }
@@ -84,10 +84,10 @@ private:
         bucketOne.seekg(sizeof(long),ios::beg);
         bucketZero.seekg(sizeof(long),ios::beg);
         RecordType record;
-        int counterOfZeros=0, counterOfOnes=0;
+        long counterOfZeros=0, counterOfOnes=0;
         while(bucket.read((char*)&record,sizeof(RecordType))){
-            string hashValue= HashFunction(record.ID,globalDepth);
-            char labelOfRecord = hashValue[globalDepth-extendedDepth];
+            string hashValue= HashFunction(record.ID,extendedDepth);
+            char labelOfRecord = hashValue[0];
             if(labelOfRecord=='0'){
                 bucketZero.write((char*)&record,sizeof(RecordType));
                 ++counterOfZeros;
@@ -103,7 +103,6 @@ private:
         bucketOne.write((char*)&counterOfOnes,sizeof(long));
         bucket.close(); bucketOne.close(); bucketZero.close();
     }
-
     void removeOldBucket(const string& bucketName){
         remove((bucketName + ".dat").c_str());
     }
@@ -158,7 +157,6 @@ private:
         //remove(hashFile.c_str());
         rename(oldname.c_str(),hashFile.c_str());
     }
-
 
 public:
     explicit ExtendibleHash(string hashFile):hashFile(move(hashFile)){
@@ -234,14 +232,33 @@ public:
                 ++size;
                 bucketFile.seekg(0,ios::beg);
                 bucketFile.write((char*)&size,sizeof(long));
-                bucketFile.seekg(size*sizeof(RecordType),ios::cur);
+                bucketFile.seekg((size-1)*sizeof(RecordType),ios::cur);
                 bucketFile.write((char*)&record,sizeof(RecordType));
+                bucketFile.close();
             }
             else{
-                if(localDepth==globalDepth){
+                if(localDepth==globalDepth)
                     rebuildIndexFile();
-                //splitBucket(localDepth, bucketName);
-                }
+                splitBucket(localDepth, bucketName);
+
+                hashValue=HashFunction(record.ID,globalDepth);
+                decimal = bitset<64>(hashValue).to_ulong();
+                file.open(hashFile,ios::binary |ios::in);
+                file.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
+                file.read((char*)&localDepth,sizeof(long));
+                file.close();
+
+                fstream bucketFile2;
+                bucketName= hashValue.substr(globalDepth-localDepth,globalDepth);
+                bucketFile2.open(bucketName+".dat",ios::binary |ios::in| ios::out);
+                long size2;
+                bucketFile2.read((char*)&size2,sizeof(long));
+                ++size2;
+                bucketFile2.seekg(0,ios::beg);
+                bucketFile2.write((char*)&size2,sizeof(long));
+                bucketFile2.seekg((size2-1)*sizeof(RecordType),ios::cur);
+                bucketFile2.write((char*)&record,sizeof(RecordType));
+                bucketFile2.close();
             }
             return true;
         }
@@ -274,13 +291,12 @@ int main(){
     hash.insertRecord(Record<long>(4));
     hash.insertRecord(Record<long>(6));
     hash.insertRecord(Record<long>(22));
-    string temp="temp.dat";
-//    hash.insertRecord(Record<long>(24));
-//    hash.insertRecord(Record<long>(10));
-//    hash.insertRecord(Record<long>(31));
-//    hash.insertRecord(Record<long>(7));
-//    hash.insertRecord(Record<long>(9));
-//    hash.insertRecord(Record<long>(20));
-//    hash.insertRecord(Record<long>(26));
+    hash.insertRecord(Record<long>(24));
+    hash.insertRecord(Record<long>(10));
+    hash.insertRecord(Record<long>(31));
+    hash.insertRecord(Record<long>(7));
+    hash.insertRecord(Record<long>(9));
+    hash.insertRecord(Record<long>(20));
+    hash.insertRecord(Record<long>(26));
     return 0;
 }
