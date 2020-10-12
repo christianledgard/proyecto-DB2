@@ -94,12 +94,22 @@ int main() {
     shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
 
     printMessage("Insertando a Madagascar");
-    teamsSequentialFile.insert(Team<long>(590, "Madagascar", 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    teamsSequentialFile.insert(Team<long>(300, "Madagascar", 1, 1, 1, 1, 1, 1, 1, 1, 1));
     teams = teamsSequentialFile.load();
     shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
 
     printMessage("Insertando a Mongolia\nTercera reconstrucción");
     teamsSequentialFile.insert(Team<long>(845, "Mongolia", 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    teams = teamsSequentialFile.load();
+    shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
+
+    printMessage("Insertando a Mongolia\nTercera reconstrucción");
+    teamsSequentialFile.insert(Team<long>(500, "Surinam", 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    teams = teamsSequentialFile.load();
+    shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
+
+    printMessage("Insertando a Mongolia\nTercera reconstrucción");
+    teamsSequentialFile.insert(Team<long>(643, "Guyana", 1, 1, 1, 1, 1, 1, 1, 1, 1));
     teams = teamsSequentialFile.load();
     shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
 

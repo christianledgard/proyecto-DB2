@@ -526,6 +526,10 @@ public:
                     sequentialFileIn.seekg(current.next * sizeof(RecordType));
                     sequentialFileIn.read((char *) &current, sizeof(RecordType));
                 }
+                // check last register
+                if (current.ID == record.ID) {
+                    throw std::out_of_range("User attempted to insert an already existing ID");
+                }
                 if (current.next < totalOrderedRecords) {
                     if (current.ID > record.ID) {
                         this->insertUpdatingPointers(record, current);
