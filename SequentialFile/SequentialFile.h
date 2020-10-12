@@ -53,26 +53,17 @@ private:
     }
 
     RecordType getPrevRecord(RecordType record) {
-        std::fstream sequentialFile(this->sequentialFileName, std::ios::in);
         if (record.next == -2) {
-            sequentialFile.seekg((totalOrderedRecords - 2) * sizeof(RecordType));
-            sequentialFile.read((char *) &record, sizeof(RecordType));
+            record = this->read(this->sequentialFileName, totalOrderedRecords - 2);
         } else {
-            sequentialFile.seekg(record.next * sizeof(RecordType));
-            sequentialFile.read((char *) &record, sizeof(RecordType));
-            sequentialFile.seekg((record.prev - 1) * sizeof(RecordType));
-            sequentialFile.read((char *) &record, sizeof(RecordType));
+            record = this->read(this->sequentialFileName, record.next);
+            record = this->read(this->sequentialFileName, record.prev - 1);
         }
         return record;
     }
 
     void simpleInsert(RecordType baseRecord, RecordType record) {
-        std::fstream sequentialFileIn(this->sequentialFileName);
-
-        RecordType baseRecordNext;
-        sequentialFileIn.seekg(baseRecord.next * sizeof(RecordType));
-        sequentialFileIn.read((char *) &baseRecordNext, sizeof(RecordType));
-        sequentialFileIn.close();
+        RecordType baseRecordNext = this->read(this->sequentialFileName, baseRecord.next);
 
         long currentRecordLogPos = this->findWhereToInsert();
         long baseRecordLogPos = baseRecordNext.prev;
@@ -83,28 +74,16 @@ private:
         record.next = baseRecordNextLogPos;
         baseRecordNext.prev = currentRecordLogPos;
 
-        std::fstream sequentialFileOut(this->sequentialFileName);
-
-        sequentialFileOut.seekp(baseRecordLogPos * sizeof(RecordType));
-        sequentialFileOut.write((char *) &baseRecord, sizeof(RecordType));
-
-        sequentialFileOut.seekp(currentRecordLogPos * sizeof(RecordType));
-        sequentialFileOut.write((char *) &record, sizeof(RecordType));
-
-        sequentialFileOut.seekp(baseRecordNextLogPos * sizeof(RecordType));
-        sequentialFileOut.write((char *) &baseRecordNext, sizeof(RecordType));
+        this->write(baseRecord, this->sequentialFileName, baseRecordLogPos);
+        this->write(record, this->sequentialFileName, currentRecordLogPos);
+        this->write(baseRecordNext, this->sequentialFileName, baseRecordNextLogPos);
     }
 
     // insert "toInsert" to the left of "currentRecord"
     void insertUpdatingPointers(RecordType toInsert, RecordType currentRecord) {
-        std::fstream sequentialFileIn(this->sequentialFileName);
-        std::fstream sequentialFileOut(this->sequentialFileName);
-
         // get previous record
         long prevRecordLogPos = currentRecord.prev;
-        sequentialFileIn.seekg(prevRecordLogPos * sizeof(RecordType));
-        RecordType prevRecord;
-        sequentialFileIn.read((char *) &prevRecord, sizeof(RecordType));
+        RecordType prevRecord = this->read(this->sequentialFileName, prevRecordLogPos);
 
         // get logical position of currentRecord
         long currentRecLogPos = prevRecord.next;
@@ -113,35 +92,21 @@ private:
 
         // update prevRecord.next
         prevRecord.next = toInsertLogPos;
-        sequentialFileOut.seekp(prevRecordLogPos * sizeof(RecordType));
-        sequentialFileOut.write((char *) &prevRecord, sizeof(RecordType));
+        this->write(prevRecord, this->sequentialFileName, prevRecordLogPos);
 
         // set toInsert pointers
         toInsert.next = currentRecLogPos;
         toInsert.prev = prevRecordLogPos;
-        sequentialFileOut.seekp(toInsertLogPos * sizeof(RecordType));
-        sequentialFileOut.write((char *) &toInsert, sizeof(RecordType));
+        this->write(toInsert, this->sequentialFileName, toInsertLogPos);
 
         // update currentRecord.prev
         currentRecord.prev = toInsertLogPos;
-        sequentialFileOut.seekp(currentRecLogPos * sizeof(RecordType));
-        sequentialFileOut.write((char *) &currentRecord, sizeof(RecordType));
-
-        sequentialFileIn.close();
-        sequentialFileOut.close();
+        this->write(currentRecord, this->sequentialFileName, currentRecLogPos);
     }
 
     void insertAtFirstPosition(RecordType record) {
-        std::fstream sequentialFileIn(this->sequentialFileName);
-
-        RecordType firstRecord;
-        sequentialFileIn.seekg(0);
-        sequentialFileIn.read((char *) &firstRecord, sizeof(RecordType));
-
-        RecordType firstRecordNext;
-        sequentialFileIn.seekg(firstRecord.next * sizeof(RecordType));
-        sequentialFileIn.read((char *) &firstRecordNext, sizeof(RecordType));
-        sequentialFileIn.close();
+        RecordType firstRecord = this->read(this->sequentialFileName, this->getFirstRecordLogPos());
+        RecordType firstRecordNext = this->read(this->sequentialFileName, firstRecord.next);
 
         long toInsertLogPos = this->findWhereToInsert();
 
@@ -151,27 +116,13 @@ private:
 
         firstRecord.prev = 0;
 
-        std::fstream sequentialFileOut(this->sequentialFileName);
-
-        sequentialFileOut.seekp(0);
-        sequentialFileOut.write((char *) &record, sizeof(RecordType));
-
-        sequentialFileOut.seekp((toInsertLogPos) * sizeof(RecordType));
-        sequentialFileOut.write((char *) &firstRecord, sizeof(RecordType));
-
-        sequentialFileOut.seekp(firstRecord.next * sizeof(RecordType));
-        sequentialFileOut.write((char *) &firstRecordNext, sizeof(RecordType));
-
-        sequentialFileOut.close();
+        this->write(record, this->sequentialFileName, this->getFirstRecordLogPos());
+        this->write(firstRecord, this->sequentialFileName, toInsertLogPos);
+        this->write(firstRecordNext, this->sequentialFileName, firstRecord.next);
     }
 
     void insertAtLastPosition(RecordType record) {
-        std::fstream sequentialFileIn(this->sequentialFileName);
-
-        RecordType lastRecord;
-        sequentialFileIn.seekg((totalOrderedRecords - 1) * sizeof(RecordType));
-        sequentialFileIn.read((char *) &lastRecord, sizeof(RecordType));
-        sequentialFileIn.close();
+        RecordType lastRecord = this->read(this->sequentialFileName, totalOrderedRecords - 1);
 
         record.next = -2;
         record.prev = totalOrderedRecords - 1;
@@ -180,24 +131,12 @@ private:
 
         lastRecord.next = toInsertLogPos;
 
-        std::fstream sequentialFileOut(this->sequentialFileName);
-
-        sequentialFileOut.seekp((totalOrderedRecords - 1) * sizeof(RecordType));
-        sequentialFileOut.write((char *) &lastRecord, sizeof(RecordType));
-
-        sequentialFileOut.seekp((toInsertLogPos) * sizeof(RecordType));
-        sequentialFileOut.write((char *) &record, sizeof(RecordType));
-
-        sequentialFileOut.close();
+        this->write(lastRecord, this->sequentialFileName, totalOrderedRecords - 1);
+        this->write(record, this->sequentialFileName, toInsertLogPos);
     }
 
     void insertAfterNull(RecordType current, RecordType record) {
-        std::fstream sequentialFileIn(this->sequentialFileName);
-
-        RecordType currentRecordPrev;
-        sequentialFileIn.seekg(current.prev * sizeof(RecordType));
-        sequentialFileIn.read((char *) &currentRecordPrev, sizeof(RecordType));
-        sequentialFileIn.close();
+        RecordType currentRecordPrev = this->read(this->sequentialFileName, current.prev);
 
         record.next = -2;
         record.prev = currentRecordPrev.next;
@@ -206,15 +145,8 @@ private:
 
         current.next = toInsertLogPos;
 
-        std::fstream sequentialFileOut(this->sequentialFileName);
-
-        sequentialFileOut.seekp(currentRecordPrev.next * sizeof(RecordType));
-        sequentialFileOut.write((char *) &current, sizeof(RecordType));
-
-        sequentialFileOut.seekp((toInsertLogPos) * sizeof(RecordType));
-        sequentialFileOut.write((char *) &record, sizeof(RecordType));
-
-        sequentialFileOut.close();
+        this->write(current, this->sequentialFileName, currentRecordPrev.next);
+        this->write(record, this->sequentialFileName, toInsertLogPos);
     }
 
     void rebuildAfterInsert() {
@@ -229,13 +161,11 @@ private:
     RecordType searchInOrderedRecords(KeyType ID) {
         long low = 0, high = totalOrderedRecords - 1, mid;
 
-        std::fstream sequentialFile(this->sequentialFileName, std::ios::in);
         RecordType currentRecord;
 
         while (low <= high) {
             mid = (low + high) / 2;
-            sequentialFile.seekg(mid * sizeof(RecordType));
-            sequentialFile.read((char *) &currentRecord, sizeof(RecordType));
+            currentRecord = this->read(this->sequentialFileName, mid);
             KeyType currentID = currentRecord.ID;
 
             if (currentID < ID) {
@@ -251,46 +181,24 @@ private:
     }
 
     void updatePointersDelete(RecordType toDelete, long toDeleteLogPos) {
-        std::fstream sequentialFileIn(this->sequentialFileName);
-        std::fstream sequentialFileOut(this->sequentialFileName);
-
         if (toDelete.prev == -1) { // first register
-            RecordType toDeleteNext;
-            sequentialFileIn.seekg(toDelete.next * sizeof(RecordType));
-            sequentialFileIn.read((char *) &toDeleteNext, sizeof(RecordType));
-
+            RecordType toDeleteNext = this->read(this->sequentialFileName, toDelete.next);
             toDeleteNext.prev = -1;
-            
-            sequentialFileOut.seekp(toDelete.next * sizeof(RecordType));
-            sequentialFileOut.write((char *) &toDeleteNext, sizeof(RecordType));
+            this->write(toDeleteNext, this->sequentialFileName, toDelete.next);
         } else if (toDelete.next == - 2) { // register whose next is null
             RecordType toDeletePrev;
-            sequentialFileIn.seekg(toDelete.prev * sizeof(RecordType));
-            sequentialFileIn.read((char *) &toDeletePrev, sizeof(RecordType));
-
+            toDeletePrev = this->read(this->sequentialFileName, toDelete.prev);
             toDeletePrev.next = -2;
-
-            sequentialFileOut.seekp(toDelete.prev * sizeof(RecordType));
-            sequentialFileOut.write((char *) &toDeletePrev, sizeof(RecordType));
+            this->write(toDeletePrev, this->sequentialFileName, toDelete.prev);
         } else { // normal case
             RecordType toDeletePrev, toDeleteNext;
-
-            sequentialFileIn.seekg(toDelete.prev * sizeof(RecordType));
-            sequentialFileIn.read((char *) &toDeletePrev, sizeof(RecordType));
-            sequentialFileIn.seekg(toDelete.next * sizeof(RecordType));
-            sequentialFileIn.read((char *) &toDeleteNext, sizeof(RecordType));
-
+            toDeletePrev = this->read(this->sequentialFileName, toDelete.prev);
+            toDeleteNext = this->read(this->sequentialFileName, toDelete.next);
             toDeletePrev.next = toDelete.next;
             toDeleteNext.prev = toDelete.prev;
-
-            sequentialFileOut.seekp(toDelete.prev * sizeof(RecordType));
-            sequentialFileOut.write((char *) &toDeletePrev, sizeof(RecordType));
-            sequentialFileOut.seekp(toDelete.next * sizeof(RecordType));
-            sequentialFileOut.write((char *) &toDeleteNext, sizeof(RecordType));
+            this->write(toDeletePrev, this->sequentialFileName, toDelete.prev);
+            this->write(toDeleteNext, this->sequentialFileName, toDelete.next);
         }
-
-        sequentialFileIn.close();
-        sequentialFileOut.close();
     }
 
     void deleteOrderedRecord(long toDeleteLogPos) {
@@ -322,47 +230,33 @@ private:
         long headerTemp = readHeader();
         writeHeader(toDeleteLogPos);
         RecordType toDelete(-1, headerTemp); // mark as deleted with ID -1
-        
-        std::fstream sequentialFileOut(this->sequentialFileName);
-        sequentialFileOut.seekp(toDeleteLogPos * sizeof(RecordType));
-        sequentialFileOut.write((char *) &toDelete, sizeof(RecordType));
-        sequentialFileOut.close();
+        this->write(toDelete, this->sequentialFileName, toDeleteLogPos);
     }
 
     long getFirstRecordLogPos() {
-        std::fstream sequentialFile(this->sequentialFileName);
-
         long currentRecordLogPos = 0;
-
-        RecordType currentRecord;
-        sequentialFile.seekg(currentRecordLogPos * sizeof(RecordType));
-        sequentialFile.read((char *) &currentRecord, sizeof(RecordType));
+        RecordType currentRecord = this->read(this->sequentialFileName, currentRecordLogPos);
         while (currentRecord.prev == -1) {
-            sequentialFile.seekg(++currentRecordLogPos * sizeof(RecordType));
-            sequentialFile.read((char *) &currentRecord, sizeof(RecordType));
+            currentRecord = this->read(this->sequentialFileName, ++currentRecordLogPos);
         }
-
         return currentRecordLogPos - 1;
     }
 
     void rebuild(unsigned long totalLines) {
-        std::fstream sequentialFileIn(this->sequentialFileName);
+        std::fstream sequentialFile(this->sequentialFileName);
         std::fstream auxFile("data/auxFile.bin", std::ios::out);
 
-        RecordType record;
-        sequentialFileIn.seekg(this->getFirstRecordLogPos() * sizeof(RecordType));
-        sequentialFileIn.read((char *) &record, sizeof(RecordType));
+        RecordType record = this->read(this->sequentialFileName, this->getFirstRecordLogPos());
         while (record.next != -2) {
             auxFile.write((char *) &record, sizeof(RecordType));
-            sequentialFileIn.seekg(record.next * sizeof(RecordType));
-            sequentialFileIn.read((char *) &record, sizeof(record));
+            record = this->read(this->sequentialFileName, record.next);
         }
         auxFile.write((char *) &record, sizeof(RecordType));
 
-        sequentialFileIn.close();
+        sequentialFile.close();
         auxFile.close();
 
-        std::fstream sequentialFileOut(this->sequentialFileName, std::ios::out);
+        sequentialFile.open(this->sequentialFileName, std::ios::out);
         auxFile.open("data/auxFile.bin");
 
         long currentNext = 1;
@@ -371,10 +265,10 @@ private:
         while (auxFile.read((char *) &record, sizeof(RecordType))) {
             record.next = totalLines == currentNext ? -2 : currentNext++;
             record.prev = currentPrev++;
-            sequentialFileOut.write((char *) &record, sizeof(RecordType));
+            sequentialFile.write((char *) &record, sizeof(RecordType));
         }
 
-        sequentialFileOut.close();
+        sequentialFile.close();
         auxFile.close();
     }
 
@@ -382,10 +276,7 @@ private:
         if (record.prev == -1) {
             return 0;
         } else {
-            std::fstream sequentialFile(this->sequentialFileName);
-            RecordType prevRecord;
-            sequentialFile.seekg(record.prev * sizeof(RecordType));
-            sequentialFile.read((char *) &prevRecord, sizeof(RecordType));
+            RecordType prevRecord = this->read(this->sequentialFileName, record.prev);
             return prevRecord.next;
         }
     }
@@ -459,15 +350,12 @@ public:
 
         RecordType current = baseRecord;
 
-        std::fstream sequentialFile(this->sequentialFileName);
-        sequentialFile.seekg(current.next * sizeof(RecordType));
-        sequentialFile.read((char *) &current, sizeof(RecordType));
+        current = this->read(this->sequentialFileName, current.next);
         while (current.ID <= ID) {
             if (current.ID == ID) {
                 return current;
             } else {
-                sequentialFile.seekg(current.next * sizeof(RecordType));
-                sequentialFile.read((char *) &current, sizeof(RecordType));
+                current = this->read(this->sequentialFileName, current.next);
             }
         }
 
@@ -498,54 +386,47 @@ public:
 
         if (baseRecord.prev == -1 && record.ID < baseRecord.ID) { // insert at the beginning
             this->insertAtFirstPosition(record);
-        } else if (baseRecord.next == -2) {
+        } else if (baseRecord.next == -2) { // insert at last position
             this->insertAtLastPosition(record);
         } else { 
             if (baseRecord.ID > record.ID) {
                 baseRecord = this->getPrevRecord(baseRecord);
             }
             if (baseRecord.next < totalOrderedRecords) {
-                this->simpleInsert(baseRecord, record);
-            } else {
+                this->simpleInsert(baseRecord, record); // when it's not necessary to find where to insert
+            } else { // when baseRecord points to unordered records
                 std::fstream sequentialFileIn(this->sequentialFileName);
 
                 RecordType current;
 
                 long baseRecordLogPos;
-                RecordType baseRecordNext;
-                sequentialFileIn.seekg(baseRecord.next * sizeof(RecordType));
-                sequentialFileIn.read((char *) &baseRecordNext, sizeof(RecordType));
+                RecordType baseRecordNext = this->read(this->sequentialFileName, baseRecord.next);
                 baseRecordLogPos = baseRecordNext.prev;
 
-                sequentialFileIn.seekg(baseRecordLogPos * sizeof(RecordType));
-                sequentialFileIn.read((char *) &current, sizeof(RecordType));
-                while (current.next > totalOrderedRecords - 1 && current.next != -2 && current.ID < record.ID) {
+                current = this->read(this->sequentialFileName, baseRecordLogPos);
+                while (current.next > totalOrderedRecords - 1 && current.next != -2 && current.ID < record.ID) { // find where to insert
                     if (current.ID == record.ID) {
                         throw std::out_of_range("User attempted to insert an already existing ID");
                     }
-                    sequentialFileIn.seekg(current.next * sizeof(RecordType));
-                    sequentialFileIn.read((char *) &current, sizeof(RecordType));
+                    current = this->read(this->sequentialFileName, current.next);
                 }
-                // check last register
-                if (current.ID == record.ID) {
+                if (current.ID == record.ID) { // check last register ID
                     throw std::out_of_range("User attempted to insert an already existing ID");
                 }
-                if (current.next < totalOrderedRecords) {
+                if (current.next < totalOrderedRecords) { // if current points to ordered records
                     if (current.ID > record.ID) {
                         this->insertUpdatingPointers(record, current);
                     } else {
                         if (current.next == -2) {
-                            this->insertAfterNull(current, record);
+                            this->insertAfterNull(current, record); // special case
                         } else {
                             long currentNextLogPos = current.next;
-                            sequentialFileIn.seekg(currentNextLogPos * sizeof(RecordType));
-                            RecordType currentNext;
-                            sequentialFileIn.read((char *) &currentNext, sizeof(RecordType));
-                            this->insertUpdatingPointers(record, currentNext);
+                            RecordType currentNext = this->read(this->sequentialFileName, currentNextLogPos);
+                            this->insertUpdatingPointers(record, currentNext); // insert record to the left of currentNext
                         }
                     }
-                } else {
-                    this->insertUpdatingPointers(record, current);
+                } else { // if current points to an unordered record
+                    this->insertUpdatingPointers(record, current); // insert record to the left of current
                 }
             }
         }
