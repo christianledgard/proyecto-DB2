@@ -20,6 +20,13 @@ private:
     unsigned long totalOrderedRecords;
     unsigned long totalUnorderedRecords;
 
+    unsigned long getFileSize(std::string newFileName) {
+        std::ifstream file(newFileName, std::ios::ate | std::ios::binary);
+        unsigned long size = file.tellg();
+        file.close();
+        return size;
+    }
+
     void initializeSequentialFile() {
         std::ifstream inputFile(this->inputFileName, std::ios::in);
         std::ofstream sequentialFile(this->sequentialFileName, std::ios::out);
@@ -121,8 +128,8 @@ private:
         sequentialFileIn.read((char *) &firstRecord, sizeof(RecordType));
 
         RecordType firstRecordNext;
-        sequentialFile.seek(firstRecord.next * sizeof(RecordType));
-        sequentialFile.read((char *) &firstRecordNext, sizeof(RecordType));
+        sequentialFileIn.seekg(firstRecord.next * sizeof(RecordType));
+        sequentialFileIn.read((char *) &firstRecordNext, sizeof(RecordType));
         sequentialFileIn.close();
 
         record.next = totalOrderedRecords + totalUnorderedRecords;
