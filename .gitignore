@@ -1,4 +1,5 @@
 SequentialFile/.vscode
 SequentialFile/notes.txt
+SequentialFile/main.dSYM
 *.out
 .DS_Store*
