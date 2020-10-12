@@ -215,7 +215,11 @@ public:
                     if (current.ID > record.ID) {
                         this->insertUpdatingPointers(record, current);
                     } else {
-                        this->insertUpdatingPointers(current, record);
+                        long currentNextLogPos = current.next;
+                        file.seekg(currentNextLogPos * sizeof(RecordType));
+                        RegisterType currentNext;
+                        file.read((char *) &currentNext, sizeof(RegisterType));
+                        this->insertUpdatingPointers(record, currentNext);
                     }
                 } else {
                     this->insertUpdatingPointers(record, current);
