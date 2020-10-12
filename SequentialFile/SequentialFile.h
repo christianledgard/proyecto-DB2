@@ -5,8 +5,6 @@
 #include <string>
 #include <fstream>
 
-#include "functions.h"
-
 template <typename RecordType>
 class SequentialFile {
 
@@ -182,7 +180,7 @@ public:
             }
         }
 
-        throw std::out_of_range("Record with ID" + std::to_string(ID) + "not found in ordered registers");
+        throw std::out_of_range("Record with ID " + std::to_string(ID) + " not found in ordered registers");
     }
 
     void insertAll(std::vector<RecordType> registers) {
