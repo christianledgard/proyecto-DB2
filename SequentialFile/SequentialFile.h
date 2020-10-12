@@ -39,7 +39,7 @@ private:
         totalUnorderedRecords = 0;
     }
 
-    RecordType getPrevRegister(RecordType record) {
+    RecordType getPrevRecord(RecordType record) {
         std::fstream sequentialFile(this->sequentialFileName, std::ios::in);
         while (record.prev > totalOrderedRecords - 2) {
             sequentialFile.seekg(record.prev);
