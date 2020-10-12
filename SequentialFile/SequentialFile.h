@@ -207,6 +207,8 @@ private:
         std::fstream sequentialFileIn(this->sequentialFileName);
         std::fstream auxFile("data/auxFile.bin", std::ios::out);
 
+        unsigned long totalLines = getFileSize(this->sequentialFileName) / sizeof(RecordType);
+
         RecordType record;
         sequentialFileIn.seekg(0);
         sequentialFileIn.read((char *) &record, sizeof(RecordType));
@@ -226,8 +228,6 @@ private:
         long currentNext = 1;
         long currentPrev = -1;
 
-        unsigned long totalLines = getFileSize(this->inputFileName) / (sizeof(RecordType) - 2 * sizeof(long)) + 5;
-
         while (auxFile.read((char *) &record, sizeof(RecordType))) {
             record.next = totalLines == currentNext ? -2 : currentNext++;
             record.prev = currentPrev++;
@@ -235,18 +235,8 @@ private:
         }
 
         totalOrderedRecords += 5;
+        totalUnorderedRecords = 0;
     }
-
-public:
-
-    SequentialFile(std::string inputFileName, std::string sequentialFileName) {
-        this->inputFileName = inputFileName;
-        this->sequentialFileName = sequentialFileName;
-
-        this->initializeSequentialFile();
-    }
-
-    SequentialFile() {}
 
     RecordType searchInOrderedRecords(KeyType ID) {
         long low = 0, high = totalOrderedRecords - 1, mid;
@@ -269,33 +259,19 @@ public:
             }
         }
 
-        // throw std::out_of_range("Record with ID " + std::to_string(ID) + " not found in ordered registers");
         return currentRecord;
     }
 
-    void insertAll(std::vector<RecordType> registers) {
-        std::sort(registers.begin(), registers.end());
-        std::fstream file(this->fileName, std::ios::out);
+public:
 
-        long nextPointer = 0;
-        // el puntero prev a null es -1
-        long prevPointer = -1;
+    SequentialFile(std::string inputFileName, std::string sequentialFileName) {
+        this->inputFileName = inputFileName;
+        this->sequentialFileName = sequentialFileName;
 
-        if (getFileSize(this->fileName) == 0) {
-            for (int i = 0; i < registers.size(); ++i) {
-                file.seekg(nextPointer * sizeof(RecordType));
-                if (i == registers.size() - 1) {
-                    // el puntero next a null es -2
-                    registers[i].next = -2;
-                } else {
-                    registers[i].next = ++nextPointer;
-                }
-                registers[i].prev = prevPointer++;
-                file.write((char *) &registers[i], sizeof(RecordType));
-            }
-            totalOrderedRecords += registers.size();
-        }
+        this->initializeSequentialFile();
     }
+
+    SequentialFile() {}
 
     std::vector<RecordType> load() {
         std::vector<RecordType> records;
@@ -307,6 +283,38 @@ public:
         }
 
         return records;
+    }
+
+    RecordType search(KeyType ID) {
+        RecordType baseRecord = this->searchInOrderedRecords(ID);
+
+        if (baseRecord.ID == ID) {
+            return baseRecord;
+        }
+
+        if ((baseRecord.prev == -1 && ID < baseRecord.ID) || (baseRecord.next == -2 && ID > baseRecord.ID)) {
+            throw std::out_of_range("Search out of range. ID: " + std::to_string(ID));
+        }
+
+        if (baseRecord.ID > ID) {
+            baseRecord = this->getPrevRecord(baseRecord);
+        }
+
+        RecordType current = baseRecord;
+
+        std::fstream sequentialFile(this->sequentialFileName);
+        sequentialFile.seekg(current.next * sizeof(RecordType));
+        sequentialFile.read((char *) &current, sizeof(RecordType));
+        while (current.ID <= ID) {
+            if (current.ID == ID) {
+                return current;
+            } else {
+                sequentialFile.seekg(current.next * sizeof(RecordType));
+                sequentialFile.read((char *) &current, sizeof(RecordType));
+            }
+        }
+
+        throw std::out_of_range("Search out of range. ID: " + std::to_string(ID));
     }
 
     void insert(RecordType record) {
