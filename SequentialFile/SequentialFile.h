@@ -116,15 +116,20 @@ private:
     void insertAtFirstPosition(RecordType record) {
         std::fstream sequentialFileIn(this->sequentialFileName);
 
-        RecordType firstRegister;
+        RecordType firstRecord;
         sequentialFileIn.seekg(0);
-        sequentialFileIn.read((char *) &firstRegister, sizeof(RecordType));
+        sequentialFileIn.read((char *) &firstRecord, sizeof(RecordType));
+
+        RecordType firstRecordNext;
+        sequentialFile.seek(firstRecord.next * sizeof(RecordType));
+        sequentialFile.read((char *) &firstRecordNext, sizeof(RecordType));
         sequentialFileIn.close();
 
         record.next = totalOrderedRecords + totalUnorderedRecords;
+        firstRecordNext.prev = totalOrderedRecords + totalUnorderedRecords;
         record.prev = -1;
 
-        firstRegister.prev = 0;
+        firstRecord.prev = 0;
 
         std::fstream sequentialFileOut(this->sequentialFileName);
 
@@ -132,7 +137,10 @@ private:
         sequentialFileOut.write((char *) &record, sizeof(RecordType));
 
         sequentialFileOut.seekp((totalOrderedRecords + totalUnorderedRecords) * sizeof(RecordType));
-        sequentialFileOut.write((char *) &firstRegister, sizeof(RecordType));
+        sequentialFileOut.write((char *) &firstRecord, sizeof(RecordType));
+
+        sequentialFileOut.seekp(firstRecord.next * sizeof(RecordType));
+        sequentialFileOut.write((char *) &firstRecordNext, sizeof(RecordType));
 
         sequentialFileOut.close();
     }
@@ -167,7 +175,7 @@ public:
             }
         }
 
-        throw std::out_of_range("Register with ID" + std::to_string(ID) + "not found in ordered registers");
+        throw std::out_of_range("Record with ID" + std::to_string(ID) + "not found in ordered registers");
     }
 
     void insertAll(std::vector<RecordType> registers) {
