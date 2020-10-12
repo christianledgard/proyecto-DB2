@@ -24,7 +24,7 @@ void printMessage(std::string message) {
     std::cout << "\n" << message << std::endl;
 }
 
-void searchAndPrintTeams(std::vector<Team<long> > teams, SequentialFile<Team<long> > teamsSequentialFile) {
+void searchAndPrintTeams(std::vector<Team<long> > teams, SequentialFile<Team<long> > &teamsSequentialFile) {
     for (Team<long> team : teams) {
         Team<long> foundTeam = teamsSequentialFile.search(team.ID);
         foundTeam.shortPrint();
@@ -32,7 +32,7 @@ void searchAndPrintTeams(std::vector<Team<long> > teams, SequentialFile<Team<lon
     }
 }
 
-void searchAndPrintTeam(long ID, SequentialFile<Team<long> > teamsSequentialFile) {
+void searchAndPrintTeam(long ID, SequentialFile<Team<long> > &teamsSequentialFile) {
     Team<long> foundTeam = teamsSequentialFile.search(ID);
     foundTeam.shortPrint();
     std::cout << std::endl;

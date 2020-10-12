@@ -66,5 +66,17 @@ int main() {
     teams = teamsSequentialFile.load();
     shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
 
+    printMessage("Borrando en registros no ordenados\nBorrando a Peru");
+    deleteAndPrint(453, teamsSequentialFile);
+
+    printMessage("Borrando a Ciudad del Vaticano");
+    deleteAndPrint(202, teamsSequentialFile);
+
+    printMessage("Borrando a Monaco");
+    deleteAndPrint(600, teamsSequentialFile);
+
+    printMessage("Borrando a San Marino");
+    deleteAndPrint(750, teamsSequentialFile);
+
     return 0;
 }

@@ -62,6 +62,13 @@ struct Team : public Record<Key> {
             std::strcpy(this->team,team.c_str());
     }
 
+    Team(Key ID, long next) {
+        this->ID = ID;
+        std::strcpy(this->team, "deleted");
+        this->next = next;
+        prev = ranking = games = wins = draws = losses = goalsFor = goalsAgainst = yellowCards = redCards = 0;
+    }
+
     Team() {}
 
     bool operator < (const Team<Key> &r1) const {

@@ -44,6 +44,14 @@ private:
         totalUnorderedRecords = 0;
     }
 
+    void initializeFreeList() {
+        std::fstream header("data/header.bin", std::ios::out);
+        long headerPointer = -1;
+        header.seekp(0);
+        header.write((char *) &headerPointer, sizeof(headerPointer));
+        header.close();
+    }
+
     RecordType getPrevRecord(RecordType record) {
         std::fstream sequentialFile(this->sequentialFileName, std::ios::in);
         if (record.next == -2) {
@@ -288,13 +296,31 @@ private:
         totalUnorderedRecords = 0;
     }
 
+    long readHeader() {
+        std::fstream header("data/header.bin");
+        long headerValue;
+        header.seekg(0);
+        header.read((char *) &headerValue, sizeof(headerValue));
+        header.close();
+        return headerValue;
+    }
+
+    void writeHeader(long toDeleteLogPos) {
+        std::fstream header("data/header.bin");
+        header.seekp(0);
+        header.write((char *) &toDeleteLogPos, sizeof(toDeleteLogPos));
+        header.close();
+    }
+
     void deleteUnorderedRecord(long toDeleteLogPos) {
-        // unsigned long totalLines = getFileSize(this->sequentialFileName) / sizeof(RecordType) - 1;
-
-        // this->rebuild(totalLines);
-
-        // totalOrderedRecords = totalOrderedRecords + totalUnorderedRecords;
-        // totalUnorderedRecords = 0;
+        long headerTemp = readHeader();
+        writeHeader(toDeleteLogPos);
+        RecordType toDelete(-1, headerTemp); // mark as deleted with ID -1
+        
+        std::fstream sequentialFileOut(this->sequentialFileName);
+        sequentialFileOut.seekp(toDeleteLogPos * sizeof(RecordType));
+        sequentialFileOut.write((char *) &toDelete, sizeof(RecordType));
+        sequentialFileOut.close();
     }
 
     long getFirstRecordLogPos() {
@@ -365,6 +391,7 @@ public:
         this->sequentialFileName = sequentialFileName;
 
         this->initializeSequentialFile();
+        this->initializeFreeList();
     }
 
     SequentialFile() {}
