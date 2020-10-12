@@ -42,7 +42,7 @@ private:
     RecordType getPrevRecord(RecordType record) {
         std::fstream sequentialFile(this->sequentialFileName, std::ios::in);
         while (record.prev > totalOrderedRecords - 2) {
-            sequentialFile.seekg(record.prev);
+            sequentialFile.seekg(record.prev * sizeof(RecordType));
             sequentialFile.read((char *) &record, sizeof(record));
         }
         return record;
