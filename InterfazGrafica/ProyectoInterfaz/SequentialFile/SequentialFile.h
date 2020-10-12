@@ -47,9 +47,14 @@ private:
 
     RecordType getPrevRecord(RecordType record) {
         std::fstream sequentialFile(this->sequentialFileName, std::ios::in);
-        while (record.prev > totalOrderedRecords - 2) {
-            sequentialFile.seekg(record.prev);
-            sequentialFile.read((char *) &record, sizeof(record));
+        if (record.next == -2) {
+            sequentialFile.seekg((totalOrderedRecords - 2) * sizeof(RecordType));
+            sequentialFile.read((char *) &record, sizeof(RecordType));
+        } else {
+            sequentialFile.seekg(record.next * sizeof(RecordType));
+            sequentialFile.read((char *) &record, sizeof(RecordType));
+            sequentialFile.seekg((record.prev - 1) * sizeof(RecordType));
+            sequentialFile.read((char *) &record, sizeof(RecordType));
         }
         return record;
     }
@@ -122,15 +127,20 @@ private:
     void insertAtFirstPosition(RecordType record) {
         std::fstream sequentialFileIn(this->sequentialFileName);
 
-        RecordType firstRegister;
+        RecordType firstRecord;
         sequentialFileIn.seekg(0);
-        sequentialFileIn.read((char *) &firstRegister, sizeof(RecordType));
+        sequentialFileIn.read((char *) &firstRecord, sizeof(RecordType));
+
+        RecordType firstRecordNext;
+        sequentialFileIn.seekg(firstRecord.next * sizeof(RecordType));
+        sequentialFileIn.read((char *) &firstRecordNext, sizeof(RecordType));
         sequentialFileIn.close();
 
         record.next = totalOrderedRecords + totalUnorderedRecords;
+        firstRecordNext.prev = totalOrderedRecords + totalUnorderedRecords;
         record.prev = -1;
 
-        firstRegister.prev = 0;
+        firstRecord.prev = 0;
 
         std::fstream sequentialFileOut(this->sequentialFileName);
 
@@ -138,7 +148,10 @@ private:
         sequentialFileOut.write((char *) &record, sizeof(RecordType));
 
         sequentialFileOut.seekp((totalOrderedRecords + totalUnorderedRecords) * sizeof(RecordType));
-        sequentialFileOut.write((char *) &firstRegister, sizeof(RecordType));
+        sequentialFileOut.write((char *) &firstRecord, sizeof(RecordType));
+
+        sequentialFileOut.seekp(firstRecord.next * sizeof(RecordType));
+        sequentialFileOut.write((char *) &firstRecordNext, sizeof(RecordType));
 
         sequentialFileOut.close();
     }
@@ -152,8 +165,10 @@ public:
         this->initializeSequentialFile();
     }
 
+    SequentialFile() {}
+
     RecordType searchInOrderedRecords(KeyType ID) {
-        unsigned long low = 0, high = totalOrderedRecords - 1, mid;
+        long low = 0, high = totalOrderedRecords - 1, mid;
 
         std::fstream sequentialFile(this->sequentialFileName, std::ios::in);
         RecordType currentRecord;
@@ -173,7 +188,8 @@ public:
             }
         }
 
-        throw std::out_of_range("Register with ID" + std::to_string(ID) + "not found in ordered registers");
+        // throw std::out_of_range("Record with ID " + std::to_string(ID) + " not found in ordered registers");
+        return currentRecord;
     }
 
     void insertAll(std::vector<RecordType> registers) {
