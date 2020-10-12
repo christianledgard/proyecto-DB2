@@ -56,10 +56,98 @@ void MainWindow::refresh(QTableWidget *tableWidget, std::string fileName)
     }
 }
 
+
+void MainWindow::refreshFromBinaryPlayer(QTableWidget *tableWidget, std::string fileName){
+    std::ifstream file(fileName, std::ios::binary);
+    Player<long> registro;
+    std::vector<Player<long>> registros;
+    while (file.read((char *) &registro, sizeof(Player<long>))){
+        registros.push_back(registro);
+    }
+    tableWidget->setRowCount(0);
+    tableWidget->setColumnCount(11);
+    tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("ID"));
+    tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem("surname"));
+    tableWidget->setHorizontalHeaderItem(2,new QTableWidgetItem("team"));
+    tableWidget->setHorizontalHeaderItem(3,new QTableWidgetItem("position"));
+    tableWidget->setHorizontalHeaderItem(4,new QTableWidgetItem("minutes"));
+    tableWidget->setHorizontalHeaderItem(5,new QTableWidgetItem("shots"));
+    tableWidget->setHorizontalHeaderItem(6,new QTableWidgetItem("passes"));
+    tableWidget->setHorizontalHeaderItem(7,new QTableWidgetItem("tackles"));
+    tableWidget->setHorizontalHeaderItem(8,new QTableWidgetItem("saves"));
+    tableWidget->setHorizontalHeaderItem(9,new QTableWidgetItem("next"));
+    tableWidget->setHorizontalHeaderItem(10,new QTableWidgetItem("prev"));
+
+    for (auto& it : registros) {
+        tableWidget->insertRow(tableWidget->rowCount());
+        tableWidget->setItem(tableWidget->rowCount()-1, 0, new QTableWidgetItem(QString::number(it.ID)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 1, new QTableWidgetItem(it.surname));
+        tableWidget->setItem(tableWidget->rowCount()-1, 2, new QTableWidgetItem(it.team));
+        tableWidget->setItem(tableWidget->rowCount()-1, 3, new QTableWidgetItem(it.position));
+        tableWidget->setItem(tableWidget->rowCount()-1, 4, new QTableWidgetItem(QString::number(it.minutes)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 5, new QTableWidgetItem(QString::number(it.shots)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 6, new QTableWidgetItem(QString::number(it.passes)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 7, new QTableWidgetItem(QString::number(it.tackles)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 8, new QTableWidgetItem(QString::number(it.saves)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 9, new QTableWidgetItem(QString::number(it.next)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 10, new QTableWidgetItem(QString::number(it.prev)));
+
+    }
+
+
+}
+
+void MainWindow::refreshFromBinaryTeams(QTableWidget *tableWidget, std::string fileName){
+    std::ifstream file(fileName, std::ios::binary);
+    Team<long> registro;
+    std::vector<Team<long>> registros;
+    while (file.read((char *) &registro, sizeof(Team<long>))){
+        registros.push_back(registro);
+    }
+    tableWidget->setRowCount(0);
+    tableWidget->setColumnCount(13);
+    tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("ID"));
+    tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem("team"));
+    tableWidget->setHorizontalHeaderItem(2,new QTableWidgetItem("ranking"));
+    tableWidget->setHorizontalHeaderItem(3,new QTableWidgetItem("games"));
+    tableWidget->setHorizontalHeaderItem(4,new QTableWidgetItem("wins"));
+    tableWidget->setHorizontalHeaderItem(5,new QTableWidgetItem("draws"));
+    tableWidget->setHorizontalHeaderItem(6,new QTableWidgetItem("losses"));
+    tableWidget->setHorizontalHeaderItem(7,new QTableWidgetItem("goalsFor"));
+    tableWidget->setHorizontalHeaderItem(8,new QTableWidgetItem("goalsAgainst"));
+    tableWidget->setHorizontalHeaderItem(9,new QTableWidgetItem("yellowCards"));
+    tableWidget->setHorizontalHeaderItem(10,new QTableWidgetItem("redCards"));
+    tableWidget->setHorizontalHeaderItem(11,new QTableWidgetItem("next"));
+    tableWidget->setHorizontalHeaderItem(12,new QTableWidgetItem("prev"));
+
+    for (auto& it : registros) {
+        qDebug() << it.team;
+        qDebug() << it.next;
+        tableWidget->insertRow(tableWidget->rowCount());
+        tableWidget->setItem(tableWidget->rowCount()-1, 0, new QTableWidgetItem(QString::number(it.ID)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 1, new QTableWidgetItem(it.team));
+        tableWidget->setItem(tableWidget->rowCount()-1, 2, new QTableWidgetItem(QString::number(it.ranking)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 3, new QTableWidgetItem(QString::number(it.games)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 4, new QTableWidgetItem(QString::number(it.wins)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 5, new QTableWidgetItem(QString::number(it.draws)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 6, new QTableWidgetItem(QString::number(it.losses)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 7, new QTableWidgetItem(QString::number(it.goalsFor)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 8, new QTableWidgetItem(QString::number(it.goalsAgainst)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 9, new QTableWidgetItem(QString::number(it.yellowCards)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 10, new QTableWidgetItem(QString::number(it.redCards)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 11, new QTableWidgetItem(QString::number(it.next)));
+        tableWidget->setItem(tableWidget->rowCount()-1, 12, new QTableWidgetItem(QString::number(it.prev)));
+    }
+
+
+}
+
 void MainWindow::on_recargar_clicked()
 {
-    refresh(ui->tableWidgetPlayers,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/Players.csv");
-    refresh(ui->tableWidgetTeams,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/Teams.csv");
+    //refresh(ui->tableWidgetPlayers,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/Players.csv");
+    //refresh(ui->tableWidgetTeams,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/Teams.csv");
+    refreshFromBinaryPlayer(ui->tableWidgetPlayers,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/PlayersSequentialFile.bin");
+    refreshFromBinaryTeams(ui->tableWidgetTeams,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/TeamsSequentialFile.bin");
 }
 
 void MainWindow::on_pushButton_clicked()
@@ -79,6 +167,10 @@ void MainWindow::on_pushButton_clicked()
     std::istringstream iss(s);
     std::vector<std::string> results(std::istream_iterator<std::string>{iss},
                                      std::istream_iterator<std::string>());
+
+    SequentialFile<Team<long>> teamsSequentialFile = SequentialFile<Team<long>>("/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/Teams.bin", "/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/TeamsSequentialFile.bin");
+    SequentialFile<Team<long>> playersSequentialFile = SequentialFile<Team<long>>("/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/Players.bin", "/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/PlayersSequentialFile.bin");
+
     if(results[0]=="SELECT"){
         qDebug() << "SELECT";
 
@@ -108,6 +200,20 @@ void MainWindow::on_pushButton_clicked()
         if(results[2]=="players"){
             qDebug() << "players";
         }else if(results[2]=="teams"){
+            Team<long> temp;
+            temp.ID=stol(results[4]);
+            std::strcpy(temp.team,results[5].c_str());
+            temp.ranking = stol(results[6]);
+            temp.games = stol(results[7]);
+            temp.wins = stol(results[8]);
+            temp.draws = stol(results[9]);
+            temp.losses = stol(results[10]);
+            temp.goalsFor = stol(results[11]);
+            temp.goalsAgainst = stol(results[12]);
+            temp.yellowCards = stol(results[13]);
+            temp.redCards = stol(results[14]);
+            teamsSequentialFile.insert(temp);
+            this->on_recargar_clicked();
             qDebug() << "teams";
         } else {
             errorDeFormato.setText("Error en el nombre de la tabla.");

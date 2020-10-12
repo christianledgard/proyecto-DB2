@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <fstream>
 
 
 #include <QMainWindow>
@@ -13,6 +14,10 @@
 #include <QDebug>
 #include <QTableWidget>
 #include <QMessageBox>
+
+//#include "Record.h"
+#include "SequentialFile/SequentialFile.h"
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -27,6 +32,8 @@ public:
     ~MainWindow();
 
     void refresh(QTableWidget *tableWidget, std::string fileName);
+    void refreshFromBinaryPlayer(QTableWidget *tableWidget, std::string fileName);
+    void refreshFromBinaryTeams(QTableWidget *tableWidget, std::string fileName);
 
 private slots:
     void on_recargar_clicked();
