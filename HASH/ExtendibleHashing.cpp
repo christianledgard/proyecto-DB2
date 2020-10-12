@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <bits/stdc++.h>
+#include <cstdio>
 #include "Bucket.cpp"
 #include "Record.cpp"
 template <typename KeyType>
@@ -49,6 +50,7 @@ private:
         zero.close();
         one.close();
     }
+
     void createNewFiles(string const& bucketName){
         fstream zero,one;
         long zeroNumber=0;
@@ -67,7 +69,7 @@ private:
             string binaryPrev=HashFunction(i,prevDepth);
             string binaryNumber=binaryPrev+bucketName;
             unsigned long decimal = bitset<64>(binaryNumber).to_ulong();
-            hash.seekg(sizeof(long)*2+(globalDepth+sizeof(long))*decimal+ globalDepth,ios::beg);
+            hash.seekg(sizeof(long)*2+(sizeof(globalDepth)+sizeof(long))*decimal+ sizeof(globalDepth),ios::beg);
             long newPointer=localDepth+1;
             hash.write((char*)& newPointer,sizeof(long));
         }
@@ -103,7 +105,7 @@ private:
     }
 
     void removeOldBucket(const string& bucketName){
-        remove(bucketName+".dat");
+        remove((bucketName + ".dat").c_str());
     }
 
     void splitBucket(long localDepth, const string &bucketName) {
@@ -111,6 +113,50 @@ private:
         updatePointersofIndixes(bucketName, localDepth);
         insertRecordsFromOldBucket(bucketName, localDepth + 1);
         removeOldBucket(bucketName);
+    }
+    void rebuildIndexFile(){
+        fstream file,temp;
+
+        file.open(hashFile,ios::binary |ios::out |ios::in);
+        temp.open("temp.dat",ios::binary |ios::out);
+        ++globalDepth;
+
+        temp.write((char*)&globalDepth,sizeof(long));
+        temp.write((char*)&blockFactor,sizeof(long));
+
+        char index[globalDepth-1];
+        long localDepth=0;
+
+        file.seekg(2*sizeof(long),ios::beg);
+
+        for(int i=0;i<pow(2,globalDepth-1);++i){
+            file.read((char*)&index,sizeof(char)*(globalDepth-1));
+            file.read((char*)&localDepth,sizeof(long));
+            char extended[globalDepth];
+            extended[0]='0';
+            for(int item=1;item<globalDepth;++item)
+                extended[item]=index[item-1];
+            temp.write((char*)&extended,sizeof(char)*globalDepth);
+            temp.write((char*)&localDepth,sizeof(long));
+        }
+
+        file.seekg(2*sizeof(long),ios::beg);
+
+        for(int i=0;i<pow(2,globalDepth-1);++i){
+            file.read((char*)&index,sizeof(char)*(globalDepth-1));
+            file.read((char*)&localDepth,sizeof(long));
+            char extended[globalDepth];
+            extended[0]='1';
+            for(int item=1;item<globalDepth;++item)
+                extended[item]=index[item-1];
+            temp.write((char*)&extended,sizeof(char)*globalDepth);
+            temp.write((char*)&localDepth,sizeof(long));
+        }
+
+        temp.close(); file.close();
+        string oldname= "temp.dat";
+        //remove(hashFile.c_str());
+        rename(oldname.c_str(),hashFile.c_str());
     }
 
 
@@ -145,12 +191,12 @@ public:
         }
     }
 
-    RecordType* search(KeyType ID){
+    RecordType* searchRecord(KeyType ID){
         string bucketLabel = HashFunction(ID,globalDepth);
         unsigned long decimal = bitset<64>(bucketLabel).to_ulong();
         fstream file;
         file.open(hashFile,ios::binary |ios::in);
-        file.seekg(sizeof(long)*2+(globalDepth+sizeof(long))*decimal+ globalDepth,ios::beg);
+        file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
         long localDepth;
         file.read((char*)&localDepth,sizeof(long));
         file.close();
@@ -160,19 +206,19 @@ public:
         bucketFile.open(bucketName+".dat",ios::binary |ios::in| ios::out);
         bucketFile.seekg(sizeof(long), ios::beg);
         auto record = new RecordType();
-        while(bucketFile.read((char*)&record,sizeof(RecordType)))
-            if(record.ID==ID)
+        while(bucketFile.read((char*)&(*record),sizeof(RecordType)))
+            if(record->ID==ID)
                 return record;
         return nullptr;
     }
 
-    bool insert(RecordType record){
-        if(search(record.ID)==nullptr){
+    bool insertRecord(RecordType record){
+        if(searchRecord(record.ID) == nullptr){
             string hashValue=HashFunction(record.ID,globalDepth);
             unsigned long decimal = bitset<64>(hashValue).to_ulong();
             fstream file;
             file.open(hashFile,ios::binary |ios::in);
-            file.seekg(sizeof(long)*2+(globalDepth+sizeof(long))*decimal+ globalDepth,ios::beg);
+            file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
             long localDepth;
             file.read((char*)&localDepth,sizeof(long));
             file.close();
@@ -192,13 +238,11 @@ public:
                 bucketFile.write((char*)&record,sizeof(RecordType));
             }
             else{
-                splitBucket(localDepth, bucketName);
                 if(localDepth==globalDepth){
-                   // rebuildIindexFile();
-                    ///TODO REBUILD INDEX
+                    rebuildIndexFile();
+                //splitBucket(localDepth, bucketName);
                 }
             }
-
             return true;
         }
         else{
@@ -206,21 +250,37 @@ public:
         }
     }
 
-    bool remove(KeyType key){
-        if(search(RecordType::rec)== nullptr){
-            ///TODO REMOVE LOGIC
-            return true;
-        }
-        else{
-            return false;
-        }
+    bool removeRecord(KeyType key){
+//        if(searchRecord(record.ID)==nullptr){
+//            ///TODO REMOVE LOGIC
+//            return true;
+//        }
+//        else{
+//            return false;
+//        }
     }
-
     ~ExtendibleHash()=default;
-
 };
 
 int main(){
-    ExtendibleHash<Record<long>> hash(3,3,"jungla.dat");
+    remove("00.dat");
+    remove("0.dat");
+    remove("10.dat");
+    remove("1.dat");
+    remove("temp.dat");
+    remove("test.dat");
+    ExtendibleHash<Record<long>> hash(1,3,"test.dat");
+    hash.insertRecord(Record<long>(16));
+    hash.insertRecord(Record<long>(4));
+    hash.insertRecord(Record<long>(6));
+    hash.insertRecord(Record<long>(22));
+    string temp="temp.dat";
+//    hash.insertRecord(Record<long>(24));
+//    hash.insertRecord(Record<long>(10));
+//    hash.insertRecord(Record<long>(31));
+//    hash.insertRecord(Record<long>(7));
+//    hash.insertRecord(Record<long>(9));
+//    hash.insertRecord(Record<long>(20));
+//    hash.insertRecord(Record<long>(26));
     return 0;
 }

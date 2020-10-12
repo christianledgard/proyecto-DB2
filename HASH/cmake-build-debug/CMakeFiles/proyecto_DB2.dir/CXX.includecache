@@ -27,6 +27,8 @@ cmath
 -
 bits/stdc++.h
 -
+cstdio
+-
 Bucket.cpp
 /home/fabrizio/Documents/UTEC/Base de Datos 2/proyecto-DB2/HASH/Bucket.cpp
 Record.cpp
