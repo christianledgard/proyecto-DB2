@@ -1,0 +1,4 @@
+SequentialFile/.vscode
+SequentialFile/notes.txt
+*.out
+.DS_Store*
