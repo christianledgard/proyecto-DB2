@@ -77,7 +77,7 @@ struct Team : public Record<Key> {
 
     void shortPrint() {
         std::cout << std::setw(4) << this->ID << " | " << std::setw(20) << team << " | " << std::setw(4) << next 
-        << " | " << std::setw(4) << prev << std::endl;
+        << " | " << std::setw(4) << prev << " | ";
     }
     
 };
