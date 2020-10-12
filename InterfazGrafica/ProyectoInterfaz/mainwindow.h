@@ -27,7 +27,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     SequentialFile<Team<long>> teamsSequentialFile;
-    SequentialFile<Team<long>> playersSequentialFile;
+    SequentialFile<Player<long>> playersSequentialFile;
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -42,6 +42,8 @@ private slots:
     void on_recargar_clicked();
 
     void on_pushButton_clicked();
+
+    void on_pushButtonHash_clicked();
 
 private:
     Ui::MainWindow *ui;

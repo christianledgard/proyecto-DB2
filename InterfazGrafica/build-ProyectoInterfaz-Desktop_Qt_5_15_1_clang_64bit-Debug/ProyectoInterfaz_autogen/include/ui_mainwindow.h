@@ -12,6 +12,7 @@
 #include <QtCore/QVariant>
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QGridLayout>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMainWindow>
@@ -32,10 +33,12 @@ class Ui_MainWindow
 public:
     QWidget *centralwidget;
     QVBoxLayout *verticalLayout_4;
+    QGridLayout *gridLayout;
     QVBoxLayout *verticalLayout_3;
     QHBoxLayout *horizontalLayout;
     QPlainTextEdit *consulta;
     QPushButton *pushButton;
+    QPushButton *pushButtonHash;
     QPushButton *recargar;
     QTabWidget *tabWidget;
     QWidget *players;
@@ -58,10 +61,17 @@ public:
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         verticalLayout_4 = new QVBoxLayout(centralwidget);
         verticalLayout_4->setObjectName(QString::fromUtf8("verticalLayout_4"));
+        gridLayout = new QGridLayout();
+        gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
+
+        verticalLayout_4->addLayout(gridLayout);
+
         verticalLayout_3 = new QVBoxLayout();
         verticalLayout_3->setObjectName(QString::fromUtf8("verticalLayout_3"));
         horizontalLayout = new QHBoxLayout();
+        horizontalLayout->setSpacing(4);
         horizontalLayout->setObjectName(QString::fromUtf8("horizontalLayout"));
+        horizontalLayout->setContentsMargins(-1, -1, -1, 0);
         consulta = new QPlainTextEdit(centralwidget);
         consulta->setObjectName(QString::fromUtf8("consulta"));
 
@@ -72,11 +82,19 @@ public:
 
         horizontalLayout->addWidget(pushButton);
 
+        pushButtonHash = new QPushButton(centralwidget);
+        pushButtonHash->setObjectName(QString::fromUtf8("pushButtonHash"));
+
+        horizontalLayout->addWidget(pushButtonHash);
+
         recargar = new QPushButton(centralwidget);
         recargar->setObjectName(QString::fromUtf8("recargar"));
+        recargar->setCheckable(false);
 
         horizontalLayout->addWidget(recargar);
 
+        horizontalLayout->setStretch(0, 5);
+        horizontalLayout->setStretch(3, 1);
 
         verticalLayout_3->addLayout(horizontalLayout);
 
@@ -136,6 +154,7 @@ public:
     {
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
         pushButton->setText(QCoreApplication::translate("MainWindow", "Ejecutar Consulta", nullptr));
+        pushButtonHash->setText(QCoreApplication::translate("MainWindow", "Ejecutar Consulta HASH", nullptr));
         recargar->setText(QCoreApplication::translate("MainWindow", "Recargar", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(players), QCoreApplication::translate("MainWindow", "Players", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(teams), QCoreApplication::translate("MainWindow", "Teams", nullptr));
