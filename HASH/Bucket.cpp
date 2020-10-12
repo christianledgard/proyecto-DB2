@@ -13,7 +13,7 @@ struct Bucket{
     Bucket(const string& label, long globalDepth, long blockFactor):
     label(label){
         fstream file;
-        if(exists(label+".dat")){
+        if(existsFile(label + ".dat")){
             file.open(label+".dat",ios::binary |ios::in);
             file.read((char*)&size,sizeof(long));
             file.close();

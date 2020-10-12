@@ -20,4 +20,28 @@ void shortPrintTeams(std::vector<Team<long> > teams, unsigned long totalOrderedR
     }
 }
 
+void printMessage(std::string message) {
+    std::cout << "\n" << message << std::endl;
+}
+
+void searchAndPrintTeams(std::vector<Team<long> > teams, SequentialFile<Team<long> > &teamsSequentialFile) {
+    for (Team<long> team : teams) {
+        Team<long> foundTeam = teamsSequentialFile.search(team.ID);
+        foundTeam.shortPrint();
+        std::cout << std::endl;
+    }
+}
+
+void searchAndPrintTeam(long ID, SequentialFile<Team<long> > &teamsSequentialFile) {
+    Team<long> foundTeam = teamsSequentialFile.search(ID);
+    foundTeam.shortPrint();
+    std::cout << std::endl;
+}
+
+void deleteAndPrint(long IDtoDelete, SequentialFile<Team<long> > &teamsSequentialFile) {
+    teamsSequentialFile.deleteRecord(IDtoDelete);
+    std::vector<Team<long> > teams = teamsSequentialFile.load();
+    shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
+}
+
 #endif
