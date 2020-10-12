@@ -203,6 +203,40 @@ private:
         sequentialFileOut.close();
     }
 
+    void rebuild() {
+        std::fstream sequentialFileIn(this->sequentialFileName);
+        std::fstream auxFile("data/auxFile.bin", std::ios::out);
+
+        RecordType record;
+        sequentialFileIn.seekg(0);
+        sequentialFileIn.read((char *) &record, sizeof(RecordType));
+        while (record.next != -2) {
+            auxFile.write((char *) &record, sizeof(RecordType));
+            sequentialFileIn.seekg(record.next * sizeof(RecordType));
+            sequentialFileIn.read((char *) &record, sizeof(record));
+        }
+        auxFile.write((char *) &record, sizeof(RecordType));
+
+        sequentialFileIn.close();
+        auxFile.close();
+
+        std::fstream sequentialFileOut(this->sequentialFileName, std::ios::out);
+        auxFile.open("data/auxFile.bin");
+
+        long currentNext = 1;
+        long currentPrev = -1;
+
+        unsigned long totalLines = getFileSize(this->inputFileName) / (sizeof(RecordType) - 2 * sizeof(long)) + 5;
+
+        while (auxFile.read((char *) &record, sizeof(RecordType))) {
+            record.next = totalLines == currentNext ? -2 : currentNext++;
+            record.prev = currentPrev++;
+            sequentialFileOut.write((char *) &record, sizeof(RecordType));
+        }
+
+        totalOrderedRecords += 5;
+    }
+
 public:
 
     SequentialFile(std::string inputFileName, std::string sequentialFileName) {
@@ -331,7 +365,9 @@ public:
                 }
             }
         }
-        ++totalUnorderedRecords;
+        if (++totalUnorderedRecords == 5) {
+            this->rebuild();
+        }
     }
 
     long getTotalOrderedRecords() {
