@@ -180,7 +180,8 @@ public:
             }
         }
 
-        throw std::out_of_range("Record with ID " + std::to_string(ID) + " not found in ordered registers");
+        // throw std::out_of_range("Record with ID " + std::to_string(ID) + " not found in ordered registers");
+        return currentRecord;
     }
 
     void insertAll(std::vector<RecordType> registers) {
