@@ -2,7 +2,7 @@
 #include <fstream>
 using namespace std;
 
-bool exists(const string& file){
+bool existsFile(const string& file){
     ifstream ifile;
     ifile.open(file);
     if(ifile)
