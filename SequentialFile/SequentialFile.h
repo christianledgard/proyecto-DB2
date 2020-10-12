@@ -164,8 +164,10 @@ public:
         this->initializeSequentialFile();
     }
 
+    SequentialFile() {}
+
     RecordType searchInOrderedRecords(KeyType ID) {
-        unsigned long low = 0, high = totalOrderedRecords - 1, mid;
+        long low = 0, high = totalOrderedRecords - 1, mid;
 
         std::fstream sequentialFile(this->sequentialFileName, std::ios::in);
         RecordType currentRecord;
