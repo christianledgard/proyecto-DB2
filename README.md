@@ -28,7 +28,9 @@ En primer lugar esperamos obtener un tiempo de búsqueda menor en la estructura 
 - Los registros se encuentran ordenados (en orden ascendente) bajo su ID.
 - Sea R cualquier registro del sequential file. El registro de la posición ```R.next``` es estrictamente mayor que R, y el registro de la posición ```R.prev``` es estrictamente menor que R.
 - Los registros ordenados y no ordenados se encuentran todos en un mismo archivo.
-- Una vez hay 
+- Cuando se elimina un registro de la sección ordenada, se reconstruye el archivo debido a que la eliminación estropea la búsqueda binaria.
+- Se maneja un free list LIFO para manejar la eliminación de los registros no ordenados.
+- Cuando se inserta, primero se revisa la free list. En caso no hayan registros eliminados, se inserta al final de la sección no ordenada.
 
 ### Búsqueda
 
@@ -51,8 +53,17 @@ Primero se realiza una búsqueda binaria sobre los registros ordenados para hall
 - Insertar antes del primer registro ```void insertAtLastPosition(RecordType record)```: Se escribe el primer registro actual en la parte de registros no ordenados. Luego, se escribe en el archivo el registro a insertar en la primera posición lógica del archivo.
 - Insertar después del último registro de la sección ordenada ```void insertAtLastPosition(RecordType record)```: El registro a insertar se inserta en la sección de registros no ordenados con el puntero a ```next``` apuntando a -2.
 - Insertar cuando el registro base apunta a otro registro de la sección ordenada ```void simpleInsert(RecordType record)```: Dado que el registro base no apunta a la sección de los registros no ordenados, basta con insertar el registro a insertar en la sección no ordenada.
+- Insertar entre registros no ordenados ```void insertBetweenUnorderedRecords```: En caso el registro base apunte a un registro de la sección no ordenada, se debe encontrar la posición adecuada en la cual insertar para poder actualizar correctamente los punteros. Finalmente, se añade el registro en la sección no ordenada.
+
+**NOTAS**: 
+- Al insertar se actualizan los punteros de los registros en O(1) de modo que para cualquier registro R, el registro de la posición ```R.next``` es estrictamente mayor que R, y el registro de la posición ```R.prev``` es estrictamente menor que R.
+- Una vez hay 5 registros en la sección no ordenada, se reconstruye el archivo.
 
 ### Eliminación
+
+El método de eliminación es ```void deleteRecord(KeyType ID)```.
+
+Primero se busca en todo el archivo el registro a eliminar. Una vez se encuentra, se obtiene su posición lógica. Luego, se llama al método ```void updatePointersDelete(RecordType toDelete, KeyType toDeleteLogPos)``` para actualizar los punteros de ```toDelete.prev``` y ```toDelete.next```. Luego se evalúa si el registro se encuentra en la sección ordenada o no ordenada. En caso el registro a eliminar se encuentre en la sección ordenada, se borra el registro y se reconstruye el archivo, debido a que aquella eliminación arruina la búsqueda binaria en la sección ordenada. En caso el registro a eliminar se encuentre en la sección no ordenada, se utiliza un free list LIFO para manejar la eliminación.
 
 ## Extendible Hashing
 
