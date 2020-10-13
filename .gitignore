@@ -5,3 +5,6 @@ SequentialFile/main.dSYM
 .DS_Store*
 .vscode/settings.json
 .idea
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/c_cpp_properties.json
