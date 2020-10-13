@@ -189,7 +189,7 @@ private:
         rename(oldname.c_str(),hashFile.c_str());
     }
 
-    void rebuildColapse(){
+    void rebuildColapse(long & accesosADisco){
         fstream file,temp;
 
         file.open(hashFile,ios::binary |ios::out |ios::in);
@@ -197,7 +197,8 @@ private:
         --globalDepth;
 
         file.seekg(sizeof(long)*2,ios::beg);
-
+        ++accesosADisco;
+        ++accesosADisco;
         temp.write((char*)&globalDepth,sizeof(long));
         temp.write((char*)&blockFactor,sizeof(long));
 
@@ -207,6 +208,7 @@ private:
         for(int i=0;i<pow(2,globalDepth);++i){
             file.seekg(sizeof(char)*(globalDepth+1),ios::cur);
             file.read((char*)&localDepth,sizeof(long));
+            ++accesosADisco;
 
             index=HashFunction(i,globalDepth);
             char array[globalDepth];
@@ -214,6 +216,8 @@ private:
 
             temp.write((char*)&array,sizeof(char)*globalDepth);
             temp.write((char*)&localDepth,sizeof(long));
+            ++accesosADisco;
+            ++accesosADisco;
         }
 
         temp.close(); file.close();
@@ -278,7 +282,7 @@ private:
         return make_pair(nullptr,bucketName);
     }
 
-    pair<bool,pair<string,string>> getcontextBuddy(KeyType key){
+    pair<bool,pair<string,string>> getcontextBuddy(KeyType key, long & accesosADisco){
         string hashValue=HashFunction(key,globalDepth);
         string buddyHashValue=getBuddy(hashValue);
         unsigned long decimal = bitset<64>(hashValue).to_ulong();
@@ -288,8 +292,10 @@ private:
         file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
         long localDepth,localDepthBuddy;
         file.read((char*)&localDepth,sizeof(long));
+        ++accesosADisco;
         file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*decimalBuddy+ sizeof(char)*globalDepth,ios::beg);
         file.read((char*)&localDepthBuddy,sizeof(long));
+        ++accesosADisco;
         file.close();
 
         string bucketName= hashValue.substr(globalDepth-localDepth,globalDepth);
@@ -298,7 +304,7 @@ private:
         return make_pair(bucketName!=bucketBuddyName,make_pair(bucketName,bucketBuddyName));
     }
 
-    void mergeBuckets(const string& bucket,const string& buddy){
+    void mergeBuckets(const string& bucket,const string& buddy,long & accesosADisco){
         string sufix= bucket.substr(1,buddy.length());
         fstream newBucket, childOne, childTwo;
         long minus=-1;
@@ -308,21 +314,29 @@ private:
 
         long size1,size2,totalSize;
         childOne.read((char*)&size1,sizeof(long));
+        ++accesosADisco;
         childTwo.read((char*)&size2,sizeof(long));
+        ++accesosADisco;
         childOne.seekg(sizeof(long),ios::cur);
         childTwo.seekg(sizeof(long),ios::cur);
         totalSize=size1+size2;
         newBucket.write((char*)&totalSize,sizeof(long));
+        ++accesosADisco;
         newBucket.write((char*)&minus,sizeof(long));
+        ++accesosADisco;
         RecordType record;
         while(childOne.read((char*)& record,sizeof(RecordType))){
+            ++accesosADisco;
             if(record.prevDelete==-2){
                 newBucket.write((char*)&record,sizeof(RecordType));
+                ++accesosADisco;
             }
         }
 
         while(childTwo.read((char*)& record,sizeof(RecordType))){
+            ++accesosADisco;
             if(record.prevDelete==-2){
+                ++accesosADisco;
                 newBucket.write((char*)&record,sizeof(RecordType));
             }
         }
@@ -340,6 +354,7 @@ private:
             unsigned long decimal = bitset<64>(binaryNumber).to_ulong();
             hash.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*decimal+sizeof(char)*globalDepth,ios::beg);
             hash.write((char*)& newPointer,sizeof(long));
+            ++accesosADisco;
         }
         newBucket.close();
         removeOldBucket(bucket);
@@ -356,7 +371,7 @@ private:
         return buddy;
     }
 
-    bool collapse(){
+    bool collapse(long & accesosADisco){
         bool canColapse=false;
         if(globalDepth>1){
             canColapse=true;
@@ -369,10 +384,14 @@ private:
                 file.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*i,ios::beg);
                 long localDepth,localDepthBuddy;
                 file.read((char*)&hashValue,+ sizeof(char)*globalDepth);
+                ++accesosADisco;
                 file.read((char*)&localDepth,sizeof(long));
+                ++accesosADisco;
                 file.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*(i+pow(2,globalDepth-1)),ios::beg);
                 file.read((char*)&buddyHashValue,+ sizeof(char)*globalDepth);
                 file.read((char*)&localDepthBuddy,sizeof(long));
+                ++accesosADisco;
+                ++accesosADisco;
 
                 string hashString,buddyHashString;
                 for(auto it:hashValue)
@@ -389,13 +408,13 @@ private:
                     return canColapse;
                 }
             }
-            rebuildColapse();
+            rebuildColapse(accesosADisco);
         }
         return canColapse;
     }
 
-    void tryCombine(KeyType key,string& buffer){
-        auto contextBuddy=getcontextBuddy(key);
+    void tryCombine(KeyType key,string& buffer, long & accesosADisco){
+        auto contextBuddy=getcontextBuddy(key,accesosADisco);
         if(contextBuddy.first){
 
             string buddyBucketName=getBuddy(buffer);
@@ -406,39 +425,47 @@ private:
 
             long size,sizeBuddy;
             bucketFile.read((char*)&size,sizeof(long));
+            ++accesosADisco;
             buddyBucketFile.read((char*)&sizeBuddy,sizeof(long));
+            ++accesosADisco;
             bucketFile.close();
             buddyBucketFile.close();
             if(size+sizeBuddy<=blockFactor){
-                mergeBuckets(buffer,buddyBucketName);
-                if(collapse()){
+                mergeBuckets(buffer,buddyBucketName,accesosADisco);
+                if(collapse(accesosADisco)){
                     buffer = buffer.substr(1,buffer.length());
-                    tryCombine(key,buffer);
+                    tryCombine(key,buffer,accesosADisco);
                 }
             }
         }
     }
 
-    void deleteRecordFromFile(KeyType key,const string &buffer){
+    void deleteRecordFromFile(KeyType key,const string &buffer, long & accesosADisco){
         fstream bucketFile;
         bucketFile.open(buffer+".dat",ios::binary |ios::in| ios::out);
         long size,header;
+        ++accesosADisco;
+        ++accesosADisco;
         bucketFile.read((char*)&size,sizeof(long));
         bucketFile.read((char*)&header,sizeof(long));
         auto record = new RecordType();
         long i;
         for(i=0;i<size;++i){
             bucketFile.read((char*)&(*record),sizeof(RecordType));
+            ++accesosADisco;
             if(record->ID==key)
                 break;
         }
         bucketFile.seekg(sizeof(long)*2+sizeof(RecordType)*i+sizeof(KeyType),ios::beg);
         bucketFile.write((char*)&header,sizeof(long));
+        ++accesosADisco;
         bucketFile.seekg(sizeof(long),ios::beg);
         bucketFile.write((char*)&i,sizeof(long));
+        ++accesosADisco;
         --size;
         bucketFile.seekg(0,ios::beg);
         bucketFile.write((char*)&size,sizeof(long));
+        ++accesosADisco;
         bucketFile.close();
     }
 
@@ -546,15 +573,16 @@ public:
         }
     }
 
-    bool removeRecord(KeyType key){
-        pair<RecordType*,string> recordAndBuffer=getRecordAndBuffer(key);
+    long removeRecord(KeyType key){
+        long accesosADisco=0;
+        pair<RecordType*,string> recordAndBuffer=getRecordAndBuffer(key,accesosADisco);
         if(recordAndBuffer.first!=nullptr){
-            deleteRecordFromFile(key,recordAndBuffer.second);
-            tryCombine(key,recordAndBuffer.second);
-            return true;
+            deleteRecordFromFile(key,recordAndBuffer.second,accesosADisco);
+            tryCombine(key,recordAndBuffer.second,accesosADisco);
+            return accesosADisco;
         }
         else{
-            return false;
+            return accesosADisco;
         }
     }
 
@@ -584,20 +612,17 @@ int main(){
     remove("test.dat");
     ExtendibleHash<Player<long>> hash(1,1,"test.dat");
 
-    vector<long> time_for_search;
+    vector<long> memory_for_search;
 
     for(long i=0;i<10000;++i){
         hash.insertRecord(Player<long>(i/2,"APELLIDO" ,"EQUIPO","POSICION",i,i,i,i,i),false);
     }
 
     for(long i=0;i<10000;++i){
-        auto t1 = std::chrono::high_resolution_clock::now();
-        hash.searchRecord(i/2);
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-        time_for_search.push_back(duration);
+        long it= hash.searchRecord(i/2);
+        memory_for_search.push_back(it);
     }
-    write_csv("time_search_hash.csv", time_for_search);
+    write_csv("memory_search_hash.csv", memory_for_search);
 
 
 //    hash.insertRecord(Record<long>(16),true);
