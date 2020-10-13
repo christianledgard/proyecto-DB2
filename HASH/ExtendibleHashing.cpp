@@ -271,7 +271,7 @@ private:
         string sufix= bucket.substr(1,buddy.length());
         fstream newBucket, childOne, childTwo;
         long minus=-1;
-        newBucket.open(sufix+".dat", ios::binary | ios::in | ios::out);
+        newBucket.open(sufix+".dat", ios::out);
         childOne.open(bucket+".dat", ios::binary | ios::in | ios::out);
         childTwo.open(buddy+".dat", ios::binary | ios::in | ios::out);
 
@@ -301,11 +301,10 @@ private:
         fstream hash;
         hash.open(hashFile,ios::binary|ios::in|ios::out);
 
-        char index[globalDepth];
         long newPointer=(long)bucket.length()-1;
 
         long newDepth=globalDepth-sufix.length();
-        for(long i=0;i<pow(2,globalDepth-bucket.length());++i){
+        for(long i=0;i<=pow(2,globalDepth-bucket.length());++i){
             string binaryPrev=HashFunction(i,newDepth);
             string binaryNumber=binaryPrev+sufix;
             unsigned long decimal = bitset<64>(binaryNumber).to_ulong();
@@ -454,7 +453,7 @@ public:
         return canColapse;
     }
 
-    void tryCombine(KeyType key,const string& buffer){
+    void tryCombine(KeyType key,string& buffer){
         auto contextBuddy=getcontextBuddy(key);
         if(contextBuddy.first){
 
@@ -467,10 +466,12 @@ public:
             long size,sizeBuddy;
             bucketFile.read((char*)&size,sizeof(long));
             buddyBucketFile.read((char*)&sizeBuddy,sizeof(long));
-
+            bucketFile.close();
+            buddyBucketFile.close();
             if(size+sizeBuddy<=blockFactor){
                 mergeBuckets(buffer,buddyBucketName);
                 if(collapse()){
+                    buffer = buffer.substr(1,buffer.length());
                     tryCombine(key,buffer);
                 }
             }
@@ -478,7 +479,6 @@ public:
     }
 
     void deleteRecordFromFile(KeyType key,const string &buffer){
-
         fstream bucketFile;
         bucketFile.open(buffer+".dat",ios::binary |ios::in| ios::out);
         long size,header;
@@ -518,6 +518,8 @@ public:
 int main(){
     remove("000.dat");
     remove("1.dat");
+    remove("0.dat");
+    remove("10.dat");
     remove("010.dat");
     remove("100.dat");
     remove("110.dat");
@@ -536,7 +538,6 @@ int main(){
     hash.insertRecord(Record<long>(9));
     hash.insertRecord(Record<long>(20));
     hash.removeRecord(24);
-    hash.insertRecord(Record<long>(26));
+    //hash.insertRecord(Record<long>(26));
     return 0;
 }
-
