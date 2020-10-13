@@ -548,11 +548,10 @@ int main(){
     hash.insertRecord(Record<long>(22));
     hash.insertRecord(Record<long>(31));
     hash.insertRecord(Record<long>(7));
-    //hash.insertRecord(Record<long>(20));
-    hash.removeRecord(16);
-    hash.removeRecord(24);
-    hash.removeRecord(10);
-    hash.removeRecord(26);
+//    hash.removeRecord(16);
+//    hash.removeRecord(24);
+//    hash.removeRecord(10);
+//    hash.removeRecord(26);
     //hash.insertRecord(Record<long>(26));
 
 
