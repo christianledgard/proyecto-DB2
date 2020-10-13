@@ -283,7 +283,7 @@ private:
         totalSize=size1+size2;
         newBucket.write((char*)&totalSize,sizeof(long));
         newBucket.write((char*)&minus,sizeof(long));
-
+ 
         RecordType record;
         while(childOne.read((char*)& record,sizeof(RecordType))){
             if(record.prevDelete==0){
