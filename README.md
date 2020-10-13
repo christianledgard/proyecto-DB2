@@ -4,11 +4,11 @@ Franco, Ledgard & Reátegui - CS UTEC
 # Introducción
 ## Objetivo del proyecto.
 
-Hoy en día las bases de datos son indispensables en nuestra sociedad. Sin una forma estructurada de manejar grandes volúmenes de información, seguramente que grandes avances científicos no se hubieran podido haber llevado acabo. Sumado a esto, la importancia de conocer algoritmos eficientes de inserción, búsqueda y eliminación no es menos importante. En este proyecto nosotros nos enfocaremos en la elaboración de 2 estructuras (**Sequential File** y **Extendible Hashing**) para guardar información. Luego, desarollaremos algunos experimentos y validaremos la importancia de las mismas. 
+Hoy en día las bases de datos son indispensables en nuestra sociedad. Sin una forma estructurada de manejar grandes volúmenes de información, seguramente grandes avances científicos no se hubieran podido haber llevado acabo. Sumado a esto, la importancia de conocer algoritmos eficientes de inserción, búsqueda y eliminación no es menos importante. En este proyecto nosotros nos enfocaremos en la elaboración de 2 estructuras (**Sequential File** y **Extendible Hashing**) para guardar información. Luego, desarollaremos algunos experimentos y validaremos la importancia de las mismas. 
 
 ## Descripción del dominio de datos a usar.
 
-En este proyecto utilizaremos dos sets de datos: "Players.csv" y "Teams.csv". Dichos sets de datos, altamente conocidos en el mundo del Machine Learning, cuentan con 595 y 32 tuplas respectivamente. Consideramos que es una cantidad relevante de tuplas para realizar todas nuestras pruebas, validaciones, test y experimentos. 
+En este proyecto utilizaremos dos sets de datos: "Players.csv" y "Teams.csv". Dichos sets de datos, conocidos en el mundo del Machine Learning, cuentan con 595 y 32 tuplas respectivamente. Consideramos que es una cantidad adecuada de tuplas para realizar todas nuestras pruebas, validaciones, test y experimentos. 
 
 ## Resultados que se esperan obtener.
 
@@ -20,20 +20,39 @@ En primer lugar esperamos obtener un tiempo de búsqueda menor en la estructura 
 
 ## Sequencial File
 
-### Inserción
+### Lineamientos
 
-![Inserción Sequencial File](https://i.ibb.co/9chv09W/Captura-de-Pantalla-2020-10-12-a-la-s-14-05-39.png)
-
-![](https://i.ibb.co/swjb0cd/Captura-de-Pantalla-2020-10-12-a-la-s-14-10-37.png)
-
-### Eliminación
-![](https://i.ibb.co/7Vyv89y/Captura-de-Pantalla-2020-10-12-a-la-s-14-17-16.png)
-
-![](https://i.ibb.co/z6q7bpr/Captura-de-Pantalla-2020-10-12-a-la-s-14-18-20.png)
+- Cada registro tiene un puntero al registro anterior y otro puntero al registro siguiente.
+- El puntero null previo es -1 (es decir, el previo al primer registro).
+- El puntero null siguiente es -2 (es decir, el siguiente al último registro).
+- Los registros se encuentran ordenados (en orden ascendente) bajo su ID.
+- Sea R cualquier registro del sequential file. El registro de la posición ```R.next``` es estrictamente mayor que R, y el registro de la posición ```R.prev``` es estrictamente menor que R.
+- Los registros ordenados y no ordenados se encuentran todos en un mismo archivo.
+- Una vez hay 
 
 ### Búsqueda
 
-![](https://i.ibb.co/Gv46N7p/Captura-de-Pantalla-2020-10-12-a-la-s-14-15-31.png)
+El método de búsqueda de un registro es ```RecordType search(KeyType ID)```.
+
+Primero se realiza una búsqueda binaria sobre la parte ordenada del archivo. En caso el registro a buscar no se encuentre en esta sección del archivo, se busca sobre la parte no ordenada del archivo siguiendo los punteros. En caso no se encuentre el archivo, se lanza una excepción.
+
+### Búsqueda por rangos
+
+El método de búsqueda por rangos es ```std::vector<RecordType> searchByRanges(KeyType begin, KeyType end)```.
+
+Primero se realiza una búsqueda binaria sobre la parte ordenada del archivo para encontrar el registro base para realizar la búsqueda por rangos. Luego, se va iterando a través de los punteros ```next``` de los registros al mismo tiempo que se agregan los registros que están dentro del rango a un vector. Cuando el registro actual ya se haya pasado del rango o se haya llegado al último registro, se retorna el vector con los registros encontrados.
+
+### Inserción
+
+El método de inserción es ```void insert(RecordType toInsert)```.
+
+Primero se realiza una búsqueda binaria sobre los registros ordenados para hallar el registro base. Una vez encontrado, se verifica que el ID del registro a insertar no sea igual al registro base para evitar repetidos. Luego, se verifican los distintos casos de inserción:
+
+- Insertar antes del primer registro ```void insertAtLastPosition(RecordType record)```: Se escribe el primer registro actual en la parte de registros no ordenados. Luego, se escribe en el archivo el registro a insertar en la primera posición lógica del archivo.
+- Insertar después del último registro de la sección ordenada ```void insertAtLastPosition(RecordType record)```: El registro a insertar se inserta en la sección de registros no ordenados con el puntero a ```next``` apuntando a -2.
+- Insertar cuando el registro base apunta a otro registro de la sección ordenada ```void simpleInsert(RecordType record)```: Dado que el registro base no apunta a la sección de los registros no ordenados, basta con insertar el registro a insertar en la sección no ordenada.
+
+### Eliminación
 
 ## Extendible Hashing
 
