@@ -14,6 +14,21 @@ En este proyecto utilizaremos dos sets de datos: "Players.csv" y "Teams.csv". Di
 
 En primer lugar esperamos obtener un tiempo de búsqueda menor en la estructura indexada (**Extendible Hashing**) a comparación con el **Sequential File**. Esto se debe a que las complejidades de búsqueda de ambas estructuras son diferentes. Al tener un hash, la búsqueda se vuelve O(1) y en el caso del Sequential File la complejidad es O(n).
 
+## Costos de operaciones (peor caso) en términos de acceso a memoria secundaria
+
+### Sequential File
+
+- Búsqueda O(n)
+- Inserción O(n)
+- Eliminación O(n)
+
+### Extendible Hashing
+
+- Búsqueda O(1)
+- Inserción O(n)   // Split bucket y Reescalar (agrandar) IndexFile
+- Eliminación O(n) // Merge buckets y Reescalar (reducir) IndexFile
+
+
 # Descripción de las operaciones
 
 ## Sequential File
