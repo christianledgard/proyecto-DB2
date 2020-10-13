@@ -18,9 +18,11 @@ En primer lugar esperamos obtener un tiempo de búsqueda menor en la estructura 
 
 ### Sequential File
 
-- Búsqueda O(n)
-- Inserción O(n)
-- Eliminación O(n)
+- Búsqueda: ```O(log(n) + m)```, donde ```n``` es la cantidad de registros ordenados y ```m``` es la cantidad de registros no ordenados.
+- Inserción: ```O(log(n) + m)```, donde ```n``` es la cantidad de registros ordenados y ```m``` es la cantidad de registros no ordenados.
+- Eliminación:
+    - De registros ordenados: ```O(n)```, donde ```n``` es la cantidad de registros totales.
+    - De registros no ordenados: ```O(log(n) + m)```, donde ```n``` es la cantidad de registros ordenados y ```m``` es la cantidad de registros no ordenados.
 
 ### Extendible Hashing
 
