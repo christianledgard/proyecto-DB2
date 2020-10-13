@@ -14,9 +14,7 @@ En este proyecto utilizaremos dos sets de datos: "Players.csv" y "Teams.csv". Di
 
 En primer lugar esperamos obtener un tiempo de búsqueda menor en la estructura indexada (**Extendible Hashing**) a comparación con el **Sequential File**. Esto se debe a que las complejidades de búsqueda de ambas estructuras son diferentes. Al tener un hash, la búsqueda se vuelve O(1) y en el caso del Sequential File la complejidad es O(n).
 
-# Fundamente y describa las técnicas.
-
-- Describa brevemente las técnicas de indexación de archivos que ha elegido. Explique procedimentalmente el proceso de inserción, eliminación y búsqueda.
+# Descripción de las operaciones
 
 ## Sequential File
 
@@ -71,9 +69,6 @@ Primero se busca en todo el archivo el registro a eliminar. Una vez se encuentra
 
 Para los casos de inserrción, un punto muy importante a tener en cuenta son los casos de **overflow**. Estos ocurren cuando queremos insertar un elemento en un bucket que esta lleno (el factor de bloque es igual a la cantidad de elementos). En este caso, cuando ocurre overflow, tenemos que realizar un split y expansión como observamos a continuación:
 
-![](https://i.ibb.co/JdQbHmx/Captura-de-Pantalla-2020-10-12-a-la-s-15-41-20.png)
-
-![](https://i.ibb.co/92VQD20/Captura-de-Pantalla-2020-10-12-a-la-s-15-41-25.png)
 
 ### Eliminación
 
