@@ -4,3 +4,4 @@ SequentialFile/main.dSYM
 *.out
 .DS_Store*
 .vscode/settings.json
+.idea
