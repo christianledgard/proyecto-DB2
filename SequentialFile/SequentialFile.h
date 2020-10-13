@@ -309,6 +309,40 @@ private:
         file.close();
     }
 
+    void insertBetweenUnorderedRecords(RecordType baseRecord, RecordType toInsert) {
+        RecordType current;
+
+        long baseRecordLogPos;
+        RecordType baseRecordNext = this->read(this->sequentialFileName, baseRecord.next);
+        baseRecordLogPos = baseRecordNext.prev;
+
+        current = this->read(this->sequentialFileName, baseRecordLogPos);
+        while (current.next > totalOrderedRecords - 1 && current.next != -2 && current.ID < toInsert.ID) { // find where to insert
+            if (current.ID == toInsert.ID) {
+                throw std::out_of_range("User attempted to insert an already existing ID");
+            }
+            current = this->read(this->sequentialFileName, current.next);
+        }
+        if (current.ID == toInsert.ID) { // check last register ID
+            throw std::out_of_range("User attempted to insert an already existing ID");
+        }
+        if (current.next < totalOrderedRecords) { // if current points to ordered records
+            if (current.ID > toInsert.ID) {
+                this->insertUpdatingPointers(toInsert, current);
+            } else {
+                if (current.next == -2) {
+                    this->insertAfterNull(current, toInsert); // special case
+                } else {
+                    long currentNextLogPos = current.next;
+                    RecordType currentNext = this->read(this->sequentialFileName, currentNextLogPos);
+                    this->insertUpdatingPointers(toInsert, currentNext); // insert record to the left of currentNext
+                }
+            }
+        } else { // if current points to an unordered record
+            this->insertUpdatingPointers(toInsert, current); // insert record to the left of current
+        }
+    }
+
 public:
 
     SequentialFile(std::string inputFileName, std::string sequentialFileName) {
@@ -403,57 +437,25 @@ public:
         }
     }
 
-    void insert(RecordType record) {
-        RecordType baseRecord = this->searchInOrderedRecords(record.ID);
+    void insert(RecordType toInsert) {
+        RecordType baseRecord = this->searchInOrderedRecords(toInsert.ID);
 
-        if (baseRecord.ID == record.ID) {
+        if (baseRecord.ID == toInsert.ID) {
             throw std::out_of_range("User attempted to insert an already existing ID");
         }
 
-        if (baseRecord.prev == -1 && record.ID < baseRecord.ID) { // insert at the beginning
-            this->insertAtFirstPosition(record);
+        if (baseRecord.prev == -1 && toInsert.ID < baseRecord.ID) { // insert at the beginning
+            this->insertAtFirstPosition(toInsert);
         } else if (baseRecord.next == -2) { // insert at last position
-            this->insertAtLastPosition(record);
+            this->insertAtLastPosition(toInsert);
         } else { 
-            if (baseRecord.ID > record.ID) {
+            if (baseRecord.ID > toInsert.ID) {
                 baseRecord = this->getPrevRecord(baseRecord);
             }
             if (baseRecord.next < totalOrderedRecords) {
-                this->simpleInsert(baseRecord, record); // when it's not necessary to find where to insert
+                this->simpleInsert(baseRecord, toInsert); // when it's not necessary to insert "between" unordered registers
             } else { // when baseRecord points to unordered records
-                std::fstream sequentialFileIn(this->sequentialFileName);
-
-                RecordType current;
-
-                long baseRecordLogPos;
-                RecordType baseRecordNext = this->read(this->sequentialFileName, baseRecord.next);
-                baseRecordLogPos = baseRecordNext.prev;
-
-                current = this->read(this->sequentialFileName, baseRecordLogPos);
-                while (current.next > totalOrderedRecords - 1 && current.next != -2 && current.ID < record.ID) { // find where to insert
-                    if (current.ID == record.ID) {
-                        throw std::out_of_range("User attempted to insert an already existing ID");
-                    }
-                    current = this->read(this->sequentialFileName, current.next);
-                }
-                if (current.ID == record.ID) { // check last register ID
-                    throw std::out_of_range("User attempted to insert an already existing ID");
-                }
-                if (current.next < totalOrderedRecords) { // if current points to ordered records
-                    if (current.ID > record.ID) {
-                        this->insertUpdatingPointers(record, current);
-                    } else {
-                        if (current.next == -2) {
-                            this->insertAfterNull(current, record); // special case
-                        } else {
-                            long currentNextLogPos = current.next;
-                            RecordType currentNext = this->read(this->sequentialFileName, currentNextLogPos);
-                            this->insertUpdatingPointers(record, currentNext); // insert record to the left of currentNext
-                        }
-                    }
-                } else { // if current points to an unordered record
-                    this->insertUpdatingPointers(record, current); // insert record to the left of current
-                }
+                this->insertBetweenUnorderedRecords(baseRecord, toInsert);
             }
         }
         if (++totalUnorderedRecords == 5) {
