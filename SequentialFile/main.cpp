@@ -113,5 +113,11 @@ int main() {
     teams = teamsSequentialFile.load();
     shortPrintTeams(teams, teamsSequentialFile.getTotalOrderedRecords());
 
+    printMessage("Búsqueda por rangos entre los ID 0 y 1000");
+    searchAndPrintTeamsRange(0, 1000, teamsSequentialFile);
+
+    printMessage("Búsqueda por rangos entre los ID 500 y 845");
+    searchAndPrintTeamsRange(500, 845, teamsSequentialFile);
+
     return 0;
 }

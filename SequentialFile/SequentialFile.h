@@ -362,6 +362,32 @@ public:
         throw std::out_of_range("Search out of range. ID: " + std::to_string(ID));
     }
 
+    std::vector<RecordType> searchRange(KeyType begin, KeyType end) {
+        if (begin > end) {
+            std::swap(begin, end);
+        }
+
+        RecordType current = this->searchInOrderedRecords(begin);
+
+        if (current.prev != -1) {
+            if (current.ID > begin) {
+                current = this->getPrevRecord(current);
+            }
+        }
+
+        std::vector<RecordType> searchResult;
+
+        while (true) {
+            if (current.ID >= begin && current.ID <= end) {
+                searchResult.push_back(current);
+            }
+            if (current.ID > end || current.next == -2) {
+                return searchResult;
+            }
+            current = this->read(this->sequentialFileName, current.next);
+        }
+    }
+
     void deleteRecord(KeyType ID) {
         RecordType toDelete = this->search(ID);
         long toDeleteLogPos = this->getLogicalPosition(toDelete);

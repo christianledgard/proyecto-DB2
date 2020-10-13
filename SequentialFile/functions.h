@@ -38,6 +38,14 @@ void searchAndPrintTeam(long ID, SequentialFile<Team<long> > &teamsSequentialFil
     std::cout << std::endl;
 }
 
+void searchAndPrintTeamsRange(long begin, long end, SequentialFile<Team<long> > &teamsSequentialFile) {
+    std::vector<Team<long> > searchResult = teamsSequentialFile.searchRange(begin, end);
+    for (Team<long> team : searchResult) {
+        team.shortPrint();
+        putchar('\n');
+    }
+}
+
 void deleteAndPrint(long IDtoDelete, SequentialFile<Team<long> > &teamsSequentialFile) {
     teamsSequentialFile.deleteRecord(IDtoDelete);
     std::vector<Team<long> > teams = teamsSequentialFile.load();
