@@ -19,12 +19,13 @@ struct Player : public Record<Key> {
     long minutes, shots, passes, tackles, saves;
     long next, prev;
 
-    Player(const std::string& surname, const std::string& team, const std::string& position, long minutes,
+    Player(Key ID, const std::string& surname, const std::string& team, const std::string& position, long minutes,
         long shots, long passes, long tackles, long saves) : minutes(minutes), shots(shots), 
         passes(passes), tackles(tackles), saves(saves) {
-        std::strcpy(this->surname,surname.c_str());
-        std::strcpy(this->team,team.c_str());
-        std::strcpy(this->position,position.c_str());
+            this->ID = ID;
+            std::strcpy(this->surname,surname.c_str());
+            std::strcpy(this->team,team.c_str());
+            std::strcpy(this->position,position.c_str());
     }
 
 
