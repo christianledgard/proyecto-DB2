@@ -396,7 +396,7 @@ public:
         throw std::out_of_range("Search out of range. ID: " + std::to_string(ID));
     }
 
-    std::vector<RecordType> searchRange(KeyType begin, KeyType end) {
+    std::vector<RecordType> searchByRanges(KeyType begin, KeyType end) {
         if (begin > end) {
             std::swap(begin, end);
         }

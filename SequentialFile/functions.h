@@ -39,7 +39,7 @@ void searchAndPrintTeam(long ID, SequentialFile<Team<long> > &teamsSequentialFil
 }
 
 void searchAndPrintTeamsRange(long begin, long end, SequentialFile<Team<long> > &teamsSequentialFile) {
-    std::vector<Team<long> > searchResult = teamsSequentialFile.searchRange(begin, end);
+    std::vector<Team<long> > searchResult = teamsSequentialFile.searchByRanges(begin, end);
     for (Team<long> team : searchResult) {
         team.shortPrint();
         putchar('\n');
