@@ -18,7 +18,7 @@ En primer lugar esperamos obtener un tiempo de búsqueda menor en la estructura 
 
 - Describa brevemente las técnicas de indexación de archivos que ha elegido. Explique procedimentalmente el proceso de inserción, eliminación y búsqueda.
 
-## Sequencial File
+## Sequential File
 
 ### Lineamientos
 
