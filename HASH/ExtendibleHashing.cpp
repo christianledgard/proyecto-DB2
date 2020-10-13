@@ -112,6 +112,7 @@ private:
         bucketOne.write((char*)&minus,sizeof(long));
         bucket.close(); bucketOne.close(); bucketZero.close();
     }
+
     void removeOldBucket(const string& bucketName){
         remove((bucketName + ".dat").c_str());
     }
@@ -122,6 +123,7 @@ private:
         insertRecordsFromOldBucket(bucketName, localDepth + 1);
         removeOldBucket(bucketName);
     }
+
     void rebuildIndexFile(){
         fstream file,temp;
 
@@ -316,95 +318,6 @@ private:
         hash.close();
     }
 
-public:
-    explicit ExtendibleHash(string hashFile):hashFile(move(hashFile)){
-        if(existsFile(hashFile)){
-            ifstream file;
-            file.open(hashFile,ios::binary |ios::in);
-            file.read((char*)&globalDepth,sizeof(long));
-            file.read((char*)&blockFactor,sizeof(long));
-            file.close();
-        }
-        else{
-            throw out_of_range("Este constuctor es para Hashes existentes, indique blockFactor y globalDepth inicial");
-        }
-    }
-
-    ExtendibleHash(long globalDepth, long blockFactor,const string& hashFile):
-    globalDepth(globalDepth), blockFactor(blockFactor), hashFile(hashFile){
-        if(!existsFile(hashFile)){
-            fstream file;
-            file.open(hashFile,ios::binary |ios::out);
-            file.write((char*)&globalDepth,sizeof(long));
-            file.write((char*)&blockFactor,sizeof(long));
-            writeIndixes( file,1);
-            file.close();
-            createInitialBuckets();
-        }
-        else{
-            throw out_of_range("Este constuctor es para Hashes nuevos, solo cargue el archivo hash");
-        }
-    }
-
-
-    RecordType* searchRecord(KeyType ID){
-        return getRecordAndBuffer(ID).first;
-    }
-
-    bool insertRecord(RecordType record){
-        pair<RecordType*,string> recordAndBuffer=getRecordAndBuffer(record.ID);
-        if(recordAndBuffer.first == nullptr){
-            string hashValue=HashFunction(record.ID,globalDepth);
-            unsigned long decimal = bitset<64>(hashValue).to_ulong();
-            fstream file;
-            file.open(hashFile,ios::binary |ios::in);
-            file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
-            long localDepth;
-            file.read((char*)&localDepth,sizeof(long));
-            file.close();
-
-            string bucketName= hashValue.substr(globalDepth-localDepth,globalDepth);
-            fstream bucketFile;
-            bucketFile.open(bucketName+".dat",ios::binary |ios::in| ios::out);
-
-            long size,header;
-            bucketFile.read((char*)&size,sizeof(long));
-            bucketFile.read((char*)&header,sizeof(long));
-
-            if(size<blockFactor){
-                ++size;
-                bucketFile.seekg(0,ios::beg);
-                bucketFile.write((char*)&size,sizeof(long));
-                bucketFile.seekg(sizeof(long),ios::cur);
-                --size;
-                if(header!=-1){
-                    RecordType lastRemoved;
-                    bucketFile.seekg((header)*sizeof(RecordType),ios::cur);
-                    bucketFile.read((char*)&lastRemoved,sizeof(RecordType));
-                    bucketFile.seekg(sizeof(long),ios::beg);
-                    bucketFile.write((char*)&lastRemoved.prevDelete,sizeof(long));
-                    bucketFile.seekg(header*sizeof(RecordType)+sizeof(long)*2,ios::beg);
-                    bucketFile.write((char*)&record,sizeof(RecordType));
-                }
-                else{
-                    bucketFile.seekg((size)*sizeof(RecordType),ios::cur);
-                    bucketFile.write((char*)&record,sizeof(RecordType));
-                    bucketFile.close();
-                }
-            }
-            else{
-                if(localDepth==globalDepth)
-                    rebuildIndexFile();
-                splitBucket(localDepth, bucketName);
-                safeAddAfterSplit(record, hashValue, decimal, file, localDepth, bucketName);
-            }
-            return true;
-        }
-        else{
-            return false;
-        }
-    }
-
     string getBuddy(const string& hashValue){
         string buddy=hashValue;
         if(buddy[0]=='0')
@@ -500,6 +413,95 @@ public:
         bucketFile.close();
     }
 
+
+public:
+    explicit ExtendibleHash(string hashFile):hashFile(move(hashFile)){
+        if(existsFile(hashFile)){
+            ifstream file;
+            file.open(hashFile,ios::binary |ios::in);
+            file.read((char*)&globalDepth,sizeof(long));
+            file.read((char*)&blockFactor,sizeof(long));
+            file.close();
+        }
+        else{
+            throw out_of_range("Este constuctor es para Hashes existentes, indique blockFactor y globalDepth inicial");
+        }
+    }
+
+    ExtendibleHash(long globalDepth, long blockFactor,const string& hashFile):
+    globalDepth(globalDepth), blockFactor(blockFactor), hashFile(hashFile){
+        if(!existsFile(hashFile)){
+            fstream file;
+            file.open(hashFile,ios::binary |ios::out);
+            file.write((char*)&globalDepth,sizeof(long));
+            file.write((char*)&blockFactor,sizeof(long));
+            writeIndixes( file,1);
+            file.close();
+            createInitialBuckets();
+        }
+        else{
+            throw out_of_range("Este constuctor es para Hashes nuevos, solo cargue el archivo hash");
+        }
+    }
+
+    RecordType* searchRecord(KeyType ID){
+        return getRecordAndBuffer(ID).first;
+    }
+
+    bool insertRecord(RecordType record){
+        pair<RecordType*,string> recordAndBuffer=getRecordAndBuffer(record.ID);
+        if(recordAndBuffer.first == nullptr){
+            string hashValue=HashFunction(record.ID,globalDepth);
+            unsigned long decimal = bitset<64>(hashValue).to_ulong();
+            fstream file;
+            file.open(hashFile,ios::binary |ios::in);
+            file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
+            long localDepth;
+            file.read((char*)&localDepth,sizeof(long));
+            file.close();
+
+            string bucketName= hashValue.substr(globalDepth-localDepth,globalDepth);
+            fstream bucketFile;
+            bucketFile.open(bucketName+".dat",ios::binary |ios::in| ios::out);
+
+            long size,header;
+            bucketFile.read((char*)&size,sizeof(long));
+            bucketFile.read((char*)&header,sizeof(long));
+
+            if(size<blockFactor){
+                ++size;
+                bucketFile.seekg(0,ios::beg);
+                bucketFile.write((char*)&size,sizeof(long));
+                bucketFile.seekg(sizeof(long),ios::cur);
+                --size;
+                if(header!=-1){
+                    RecordType lastRemoved;
+                    bucketFile.seekg((header)*sizeof(RecordType),ios::cur);
+                    bucketFile.read((char*)&lastRemoved,sizeof(RecordType));
+                    bucketFile.seekg(sizeof(long),ios::beg);
+                    bucketFile.write((char*)&lastRemoved.prevDelete,sizeof(long));
+                    bucketFile.seekg(header*sizeof(RecordType)+sizeof(long)*2,ios::beg);
+                    bucketFile.write((char*)&record,sizeof(RecordType));
+                }
+                else{
+                    bucketFile.seekg((size)*sizeof(RecordType),ios::cur);
+                    bucketFile.write((char*)&record,sizeof(RecordType));
+                    bucketFile.close();
+                }
+            }
+            else{
+                if(localDepth==globalDepth)
+                    rebuildIndexFile();
+                splitBucket(localDepth, bucketName);
+                safeAddAfterSplit(record, hashValue, decimal, file, localDepth, bucketName);
+            }
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
     bool removeRecord(KeyType key){
         pair<RecordType*,string> recordAndBuffer=getRecordAndBuffer(key);
         if(recordAndBuffer.first!=nullptr){
@@ -511,6 +513,7 @@ public:
             return false;
         }
     }
+
     ~ExtendibleHash()=default;
 };
 
