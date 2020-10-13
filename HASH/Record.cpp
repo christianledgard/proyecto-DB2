@@ -2,7 +2,7 @@ template <typename Key>
 struct Record{
     typedef Key KeyType;
     KeyType ID;
-    long prevDelete=0;
+    long prevDelete=-2;
     Record(KeyType id) : ID(id) {}
     Record()=default;
 };
