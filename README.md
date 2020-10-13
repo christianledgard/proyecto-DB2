@@ -108,6 +108,14 @@ La búsqueda tiene un costo de O(1) ya que su costo no depende del número de re
 
 ### Inserción
 
+Dada por la función ```bool insertRecord(RecordType record)``` que retorna True en caso se logró insertar, caso contrario, retorna False, lo cual ocurre si el registro ya existía.
+
+- El primer paso es buscar si ya existe el registro, si no se encontró, se intenta insertar.
+- Se lee el tamaño del Bucket, si no generaría overflow la insercióneste caso, el costo depende si ocurre o no OverFlow, cuando no ocurre, la inserción se realiza en O(1), por otra parte el overFlow se maneja de la siguiente manera:
+
+
+![Alt text](https://i.ibb.co/w0vCXMx/Untitled-Diagram-Over-Flow.png)
+
 Para los casos de inserrción, un punto muy importante a tener en cuenta son los casos de **overflow**. Estos ocurren cuando queremos insertar un elemento en un bucket que esta lleno (el factor de bloque es igual a la cantidad de elementos). En este caso, cuando ocurre overflow, tenemos que realizar un split y expansión como observamos a continuación:
 
 
