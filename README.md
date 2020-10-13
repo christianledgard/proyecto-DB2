@@ -116,7 +116,57 @@ Dada por la función ```bool insertRecord(RecordType record)``` que retorna True
 
 ![Alt text](https://i.ibb.co/w0vCXMx/Untitled-Diagram-Over-Flow.png)
 
-Para los casos de inserrción, un punto muy importante a tener en cuenta son los casos de **overflow**. Estos ocurren cuando queremos insertar un elemento en un bucket que esta lleno (el factor de bloque es igual a la cantidad de elementos). En este caso, cuando ocurre overflow, tenemos que realizar un split y expansión como observamos a continuación:
+
+El algoritmo de SplitBucket es: 
+
+```
+    void splitBucket(long localDepth, const string &bucketName) {
+        createNewFiles(bucketName);  
+        updatePointersOfIndixes(bucketName, localDepth);
+        insertRecordsFromOldBucket(bucketName, localDepth + 1);
+        removeOldBucket(bucketName);
+    }
+```
+
+Lo que determina el costo es la actualización de los índices O(n) e insertar los Records que se encontraban el Bucket original.
+
+El algoritmo de DirectoryRebuild es:
+
+```
+    void rebuildIndexFile(){
+        fstream file,temp;
+        
+        Se genera un archivo temp
+        ++globalDepth; 
+        Escribir en Temp  globalDepth y blockFactor
+
+        file.seekg(2*sizeof(long),ios::beg);
+
+        for(int i=0;i<pow(2,globalDepth-1);++i){
+            file.read((char*)&index,sizeof(char)*(globalDepth-1));
+            file.read((char*)&localDepth,sizeof(long));
+            char extended[globalDepth];
+            extended[0]='0';
+            for(int item=1;item<globalDepth;++item)
+                extended[item]=index[item-1];
+            temp.write((char*)&extended,sizeof(char)*globalDepth);
+            temp.write((char*)&localDepth,sizeof(long));
+        }
+
+        file.seekg(2*sizeof(long),ios::beg);
+
+        //Same for loop as before to duplicate size
+
+        temp.close(); file.close();
+        string oldname= "temp.dat";
+        rename(oldname.c_str(),hashFile.c_str());
+    }
+
+```
+
+Se recorre el Hash original dos veces, ya que se duplica el tamaño de las entradas. Esto ocurre en O(n), esta operación sí depende de la cantidad registros.
+
+Finalmente, se concluye  que la inserción tiene O(n).
 
 
 ### Eliminación
