@@ -80,6 +80,32 @@ Primero se busca en todo el archivo el registro a eliminar. Una vez se encuentra
 
 ## Extendible Hashing
 
+### Lineamientos
+
+- Esta estructura asociada a una función Hash la cual determina a que bucket está asociado cada registro para cualquier operación.
+- Existe un IndexFile que se carga o se genera dada una profundidad global, contiene 2^(profundidad global entradas) representadas de forma binaria.
+- Cada entrada en el IndexFile tiene la forma <Bucket,LocalDepth>, lo cual permite saber que archivo apunta cada entrada.
+- Cada bucket del Hash es un archivo independiente con el nombre "bucket.dat". e.g: "010.dat"
+- LocalDepth no puede exceder Global Depth.
+- La cantidad de registros por Bucket no puede exceder el factor de bloque.
+
+### Búsqueda
+
+Dada por la función ```RecordType* searchRecord(KeyType ID)```.
+
+- Dada un ID de tipo KeyType el algoritmo de búsqueda sigue la siguiente estructura
+
+
+![alt text](https://ibb.co/v3113jw)
+
+1. Se ingresa el ID
+2. Se ingresa a la función HASH, esta retorna un valor binario.
+3. EL valor del paso anterior es usado como offset de lectura en el IndexFile
+4. El localDepth leido anteriormente es usado para leer el bucket respectivo
+5. Se recorre el bucket registro tras registro, si se encuentra se retorna un puntero a record, caso contrario se retorna nullptr.
+
+La búsqueda tiene un costo de O(1) ya que su costo no depende del número de registros almacenados, siempre se calculará el offset para realizar una única lectura en el IndexFile O(1) y luego se recorre el bucket, sin embargo, el tamaño máximo del Bucket depende del factor de bloque, es decir oscila entre 0 y el Factor Bloque, pero sigue siendo una constante, por ende, O(1).
+
 ### Inserción
 
 Para los casos de inserrción, un punto muy importante a tener en cuenta son los casos de **overflow**. Estos ocurren cuando queremos insertar un elemento en un bucket que esta lleno (el factor de bloque es igual a la cantidad de elementos). En este caso, cuando ocurre overflow, tenemos que realizar un split y expansión como observamos a continuación:
@@ -116,10 +142,6 @@ tryCombine(bucket):
 ```
 
 
-### Búsqueda
-
-- Debe notarse con claridad el manejo de la memoria secundaria.
-- Describa como realizó la simulación de transacciones. Explique el uso de hilos para la ejecución en paralelo de transacciones.
 
 # Resultados Experimentales
 - Cuadro y/o gráfico comparativo de desempeño de las técnicas de indexación de archivos sobre el dominio de datos. Tanto para inserción como para búsqueda.
