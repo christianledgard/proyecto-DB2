@@ -8,3 +8,4 @@ clean:
 	rm -f main.out
 	rm -f main
 	rm -f SequentialFile
+	rm -f Record

@@ -27,12 +27,17 @@ struct Player : public Record<Key> {
         std::strcpy(this->position,position.c_str());
     }
 
-    Player() {}
 
-    bool operator < (const Player<Key> &r1) const {
-        std::string r1Surname(r1.surname);
-        return this->surname < r1Surname;
+    Player(Key ID, long next) {
+        this->ID = ID;
+        std::strcpy(this->surname, "deleted");
+        std::strcpy(this->team, "deleted");
+        std::strcpy(this->position, "deleted");
+        this->next = next;
+        minuts = shots = passes = tackles = saves = next = prev = 0;
     }
+
+    Player() {}
 
     void print() {
         std::cout << this->ID << " | " << surname << " | " << team << " | "  << position << " | "
@@ -62,12 +67,14 @@ struct Team : public Record<Key> {
             std::strcpy(this->team,team.c_str());
     }
 
-    Team() {}
-
-    bool operator < (const Team<Key> &r1) const {
-        std::string r1Team(r1.team);
-        return this->team < r1Team;
+    Team(Key ID, long next) {
+        this->ID = ID;
+        std::strcpy(this->team, "deleted");
+        this->next = next;
+        prev = ranking = games = wins = draws = losses = goalsFor = goalsAgainst = yellowCards = redCards = 0;
     }
+
+    Team() {}
 
     void print() {
         std::cout << this->ID << " | " << team << " | " << ranking << " | "  << games << " | "
