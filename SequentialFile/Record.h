@@ -34,7 +34,7 @@ struct Player : public Record<Key> {
         std::strcpy(this->team, "deleted");
         std::strcpy(this->position, "deleted");
         this->next = next;
-        minuts = shots = passes = tackles = saves = next = prev = 0;
+        minutes = shots = passes = tackles = saves = next = prev = 0;
     }
 
     Player() {}
