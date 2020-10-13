@@ -42,26 +42,29 @@ private:
     }
     void createInitialBuckets() const {
         fstream zero,one;
-        long zeroNumber=0;
+        long zeroNumber=0,minus=-1;
         zero.open("0.dat",ios::binary |ios::out);
         one.open("1.dat",ios::binary |ios::out);
         zero.write((char*)&zeroNumber,sizeof(long));
         one.write((char*)&zeroNumber,sizeof(long));
+        zero.write((char*)&minus,sizeof(long));
+        one.write((char*)&minus,sizeof(long));
         zero.close();
         one.close();
     }
-
     void createNewFiles(string const& bucketName){
         fstream zero,one;
-        long zeroNumber=0;
+        long zeroNumber=0,minus=-1;
         zero.open("0"+bucketName+".dat",ios::binary |ios::out);
         one.open("1"+bucketName+".dat",ios::binary |ios::out);
         zero.write((char*)&zeroNumber,sizeof(long));
         one.write((char*)&zeroNumber,sizeof(long));
+        zero.write((char*)&minus,sizeof(long));
+        one.write((char*)&minus,sizeof(long));
         zero.close();
         one.close();
     }
-    void updatePointersofIndixes(string const& bucketName, long localDepth){
+    void updatePointersOfIndixes(string const& bucketName, long localDepth){
         long prevDepth=globalDepth-localDepth;
         fstream hash;
         hash.open(hashFile,ios::binary |ios::out|ios::in);
@@ -75,32 +78,38 @@ private:
         }
         hash.close();
     }
+
     void insertRecordsFromOldBucket(const string& bucketName, long extendedDepth){
         fstream bucket, bucketZero,bucketOne;
         bucket.open(bucketName+".dat", ios::binary | ios::in | ios::out);
         bucketZero.open("0"+bucketName+".dat", ios::binary | ios::in | ios::out);
         bucketOne.open("1"+bucketName+".dat", ios::binary | ios::in | ios::out);
-        bucket.seekg(sizeof(long),ios::beg);
-        bucketOne.seekg(sizeof(long),ios::beg);
-        bucketZero.seekg(sizeof(long),ios::beg);
+        bucket.seekg(sizeof(long)*2,ios::beg);
+        bucketOne.seekg(sizeof(long)*2,ios::beg);
+        bucketZero.seekg(sizeof(long)*2,ios::beg);
         RecordType record;
         long counterOfZeros=0, counterOfOnes=0;
         while(bucket.read((char*)&record,sizeof(RecordType))){
-            string hashValue= HashFunction(record.ID,extendedDepth);
-            char labelOfRecord = hashValue[0];
-            if(labelOfRecord=='0'){
-                bucketZero.write((char*)&record,sizeof(RecordType));
-                ++counterOfZeros;
-            }
-            else{
-                bucketOne.write((char*)&record,sizeof(RecordType));
-                ++counterOfOnes;
+            if(record.prevDelete==0){
+                string hashValue= HashFunction(record.ID,extendedDepth);
+                char labelOfRecord = hashValue[0];
+                if(labelOfRecord=='0'){
+                    bucketZero.write((char*)&record,sizeof(RecordType));
+                    ++counterOfZeros;
+                }
+                else{
+                    bucketOne.write((char*)&record,sizeof(RecordType));
+                    ++counterOfOnes;
+                }
             }
         }
         bucketOne.seekg(0,ios::beg);
         bucketZero.seekg(0,ios::beg);
+        long minus=-1;
         bucketZero.write((char*)&counterOfZeros,sizeof(long));
         bucketOne.write((char*)&counterOfOnes,sizeof(long));
+        bucketZero.write((char*)&minus,sizeof(long));
+        bucketOne.write((char*)&minus,sizeof(long));
         bucket.close(); bucketOne.close(); bucketZero.close();
     }
     void removeOldBucket(const string& bucketName){
@@ -109,7 +118,7 @@ private:
 
     void splitBucket(long localDepth, const string &bucketName) {
         createNewFiles(bucketName);
-        updatePointersofIndixes(bucketName, localDepth);
+        updatePointersOfIndixes(bucketName, localDepth);
         insertRecordsFromOldBucket(bucketName, localDepth + 1);
         removeOldBucket(bucketName);
     }
@@ -156,7 +165,6 @@ private:
         string oldname= "temp.dat";
         rename(oldname.c_str(),hashFile.c_str());
     }
-
 
     void rebuildColapse(){
         fstream file,temp;
@@ -207,7 +215,13 @@ private:
         ++size2;
         bucketFile2.seekg(0,ios::beg);
         bucketFile2.write((char*)&size2,sizeof(long));
-        bucketFile2.seekg((size2-1)*sizeof(RecordType),ios::cur);
+        long header;
+        bucketFile2.read((char*)&header,sizeof(long));
+        if(header!=-1)
+            size2=header;
+        else
+            --size2;
+        bucketFile2.seekg((size2)*sizeof(RecordType),ios::cur);
         bucketFile2.write((char*)&record,sizeof(RecordType));
         bucketFile2.close();
     }
@@ -225,15 +239,15 @@ private:
         string bucketName=  bucketLabel.substr(globalDepth-localDepth,globalDepth);
         fstream bucketFile;
         bucketFile.open(bucketName+".dat",ios::binary |ios::in| ios::out);
-        bucketFile.seekg(sizeof(long), ios::beg);
+        bucketFile.seekg(sizeof(long)*2, ios::beg);
         auto record = new RecordType();
         while(bucketFile.read((char*)&(*record),sizeof(RecordType)))
-            if(record->ID==ID)
+            if(record->ID==ID and record->prevDelete==0)
                 return make_pair(record,bucketName);
         return make_pair(nullptr,bucketName);
     }
 
-    pair<bool,pair<string,string>> getcontextBuddy(const string&key){
+    pair<bool,pair<string,string>> getcontextBuddy(KeyType key){
         string hashValue=HashFunction(key,globalDepth);
         string buddyHashValue=getBuddy(hashValue);
         unsigned long decimal = bitset<64>(hashValue).to_ulong();
@@ -243,7 +257,7 @@ private:
         file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
         long localDepth,localDepthBuddy;
         file.read((char*)&localDepth,sizeof(long));
-        file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*decimal+ sizeof(char)*globalDepth,ios::beg);
+        file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*decimalBuddy+ sizeof(char)*globalDepth,ios::beg);
         file.read((char*)&localDepthBuddy,sizeof(long));
         file.close();
 
@@ -251,6 +265,57 @@ private:
         string bucketBuddyName= buddyHashValue.substr(globalDepth-localDepthBuddy,globalDepth);
 
         return make_pair(bucketName!=bucketBuddyName,make_pair(bucketName,bucketBuddyName));
+    }
+
+    void mergeBuckets(const string& bucket,const string& buddy){
+        string sufix= bucket.substr(1,buddy.length());
+        fstream newBucket, childOne, childTwo;
+        long minus=-1;
+        newBucket.open(sufix+".dat", ios::binary | ios::in | ios::out);
+        childOne.open(bucket+".dat", ios::binary | ios::in | ios::out);
+        childTwo.open(buddy+".dat", ios::binary | ios::in | ios::out);
+
+        long size1,size2,totalSize;
+        childOne.read((char*)&size1,sizeof(long));
+        childTwo.read((char*)&size2,sizeof(long));
+        childOne.seekg(sizeof(long),ios::cur);
+        childTwo.seekg(sizeof(long),ios::cur);
+        totalSize=size1+size2;
+        newBucket.write((char*)&totalSize,sizeof(long));
+        newBucket.write((char*)&minus,sizeof(long));
+
+        RecordType record;
+        while(childOne.read((char*)& record,sizeof(RecordType))){
+            if(record.prevDelete==0){
+                newBucket.write((char*)&record,sizeof(RecordType));
+            }
+        }
+
+        while(childTwo.read((char*)& record,sizeof(RecordType))){
+            if(record.prevDelete==0){
+                newBucket.write((char*)&record,sizeof(RecordType));
+            }
+        }
+
+
+        fstream hash;
+        hash.open(hashFile,ios::binary|ios::in|ios::out);
+
+        char index[globalDepth];
+        long newPointer=(long)bucket.length()-1;
+
+        long newDepth=globalDepth-sufix.length();
+        for(long i=0;i<pow(2,globalDepth-bucket.length());++i){
+            string binaryPrev=HashFunction(i,newDepth);
+            string binaryNumber=binaryPrev+sufix;
+            unsigned long decimal = bitset<64>(binaryNumber).to_ulong();
+            hash.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*decimal+sizeof(char)*globalDepth,ios::beg);
+            hash.write((char*)& newPointer,sizeof(long));
+        }
+        newBucket.close();
+        removeOldBucket(bucket);
+        removeOldBucket(buddy);
+        hash.close();
     }
 
 public:
@@ -266,7 +331,6 @@ public:
             throw out_of_range("Este constuctor es para Hashes existentes, indique blockFactor y globalDepth inicial");
         }
     }
-
 
     ExtendibleHash(long globalDepth, long blockFactor,const string& hashFile):
     globalDepth(globalDepth), blockFactor(blockFactor), hashFile(hashFile){
@@ -305,16 +369,30 @@ public:
             fstream bucketFile;
             bucketFile.open(bucketName+".dat",ios::binary |ios::in| ios::out);
 
-            long size;
+            long size,header;
             bucketFile.read((char*)&size,sizeof(long));
+            bucketFile.read((char*)&header,sizeof(long));
 
             if(size<blockFactor){
                 ++size;
                 bucketFile.seekg(0,ios::beg);
                 bucketFile.write((char*)&size,sizeof(long));
-                bucketFile.seekg((size-1)*sizeof(RecordType),ios::cur);
-                bucketFile.write((char*)&record,sizeof(RecordType));
-                bucketFile.close();
+                bucketFile.seekg(sizeof(long),ios::cur);
+                --size;
+                if(header!=-1){
+                    RecordType lastRemoved;
+                    bucketFile.seekg((header)*sizeof(RecordType),ios::cur);
+                    bucketFile.read((char*)&lastRemoved,sizeof(RecordType));
+                    bucketFile.seekg(sizeof(long),ios::beg);
+                    bucketFile.write((char*)&lastRemoved.prevDelete,sizeof(long));
+                    bucketFile.seekg(header*sizeof(RecordType)+sizeof(long)*2,ios::beg);
+                    bucketFile.write((char*)&record,sizeof(RecordType));
+                }
+                else{
+                    bucketFile.seekg((size)*sizeof(RecordType),ios::cur);
+                    bucketFile.write((char*)&record,sizeof(RecordType));
+                    bucketFile.close();
+                }
             }
             else{
                 if(localDepth==globalDepth)
@@ -329,7 +407,6 @@ public:
         }
     }
 
-
     string getBuddy(const string& hashValue){
         string buddy=hashValue;
         if(buddy[0]=='0')
@@ -339,13 +416,7 @@ public:
         return buddy;
     }
 
-
-    bool hasBuddy(const string& key){
-        return getcontextBuddy(key).first;
-    }
-
     bool collapse(){
-        ///TODO COLLAPSE
         bool canColapse=false;
         if(globalDepth>1){
             canColapse=true;
@@ -355,16 +426,23 @@ public:
 
             char hashValue[globalDepth], buddyHashValue[globalDepth];
             for(long i=0;i<halfSize;++i){
-                file.seekg(sizeof(long)*2+( sizeof(char)*globalDepth+sizeof(long))*i,ios::beg);
+                file.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*i,ios::beg);
                 long localDepth,localDepthBuddy;
                 file.read((char*)&hashValue,+ sizeof(char)*globalDepth);
                 file.read((char*)&localDepth,sizeof(long));
-                file.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*i+pow(2,globalDepth-1),ios::beg);
+                file.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*(i+pow(2,globalDepth-1)),ios::beg);
                 file.read((char*)&buddyHashValue,+ sizeof(char)*globalDepth);
                 file.read((char*)&localDepthBuddy,sizeof(long));
 
-                string bucketName= hashValue.substr(globalDepth-localDepth,globalDepth);
-                string bucketBuddyName= buddyHashValue.substr(globalDepth-localDepthBuddy,globalDepth);
+                string hashString,buddyHashString;
+                for(auto it:hashValue)
+                    hashString+=it;
+
+                for(auto it:buddyHashValue)
+                    buddyHashString+=it;
+
+                string bucketName= hashString.substr(globalDepth-localDepth,globalDepth);
+                string bucketBuddyName= buddyHashString.substr(globalDepth-localDepthBuddy,globalDepth);
 
                 if(bucketBuddyName!=bucketName){
                     canColapse= false;
@@ -376,39 +454,58 @@ public:
         return canColapse;
     }
 
-
-    void tryCombine(const string& key){
+    void tryCombine(KeyType key,const string& buffer){
         auto contextBuddy=getcontextBuddy(key);
         if(contextBuddy.first){
 
-            string bucketName,buddyBuckeyName;
+            string buddyBucketName=getBuddy(buffer);
             fstream bucketFile,buddyBucketFile;
 
-            bucketFile.open(bucketName+".dat",ios::binary |ios::in| ios::out);
-            buddyBucketFile.open(buddyBuckeyName+".dat",ios::binary |ios::in| ios::out);
+            bucketFile.open(buffer+".dat",ios::binary |ios::in| ios::out);
+            buddyBucketFile.open(buddyBucketName + ".dat", ios::binary | ios::in | ios::out);
 
             long size,sizeBuddy;
             bucketFile.read((char*)&size,sizeof(long));
             buddyBucketFile.read((char*)&sizeBuddy,sizeof(long));
 
             if(size+sizeBuddy<=blockFactor){
-                ///TODO MERGE BUCKET
+                mergeBuckets(buffer,buddyBucketName);
                 if(collapse()){
-                    tryCombine(key);
+                    tryCombine(key,buffer);
                 }
             }
         }
     }
 
-    void deleteRecordFromFile(const string& key){
+    void deleteRecordFromFile(KeyType key,const string &buffer){
 
+        fstream bucketFile;
+        bucketFile.open(buffer+".dat",ios::binary |ios::in| ios::out);
+        long size,header;
+        bucketFile.read((char*)&size,sizeof(long));
+        bucketFile.read((char*)&header,sizeof(long));
+        auto record = new RecordType();
+        long i;
+        for(i=0;i<size;++i){
+            bucketFile.read((char*)&(*record),sizeof(RecordType));
+            if(record->ID==key)
+                break;
+        }
+        bucketFile.seekg(sizeof(long)*2+sizeof(RecordType)*i+sizeof(KeyType),ios::beg);
+        bucketFile.write((char*)&header,sizeof(long));
+        bucketFile.seekg(sizeof(long),ios::beg);
+        bucketFile.write((char*)&i,sizeof(long));
+        --size;
+        bucketFile.seekg(0,ios::beg);
+        bucketFile.write((char*)&size,sizeof(long));
+        bucketFile.close();
     }
 
     bool removeRecord(KeyType key){
         pair<RecordType*,string> recordAndBuffer=getRecordAndBuffer(key);
         if(recordAndBuffer.first!=nullptr){
-            ///TODO deleteRecordFromFile(key);
-            tryCombine(key);
+            deleteRecordFromFile(key,recordAndBuffer.second);
+            tryCombine(key,recordAndBuffer.second);
             return true;
         }
         else{
@@ -438,6 +535,7 @@ int main(){
     hash.insertRecord(Record<long>(7));
     hash.insertRecord(Record<long>(9));
     hash.insertRecord(Record<long>(20));
+    hash.removeRecord(24);
     hash.insertRecord(Record<long>(26));
     return 0;
 }
