@@ -96,7 +96,7 @@ Dada por la función ```RecordType* searchRecord(KeyType ID)```.
 - Dada un ID de tipo KeyType el algoritmo de búsqueda sigue la siguiente estructura
 
 
-![Alt text](https://ibb.co/v3113jw)
+![Alt text](https://i.ibb.co/5rTTrRM/Untitled-Diagram-Basic.png)
 
 1. Se ingresa el ID
 2. Se ingresa a la función HASH, esta retorna un valor binario.
