@@ -15,6 +15,9 @@ private:
 
     std::string inputFileName;
     std::string sequentialFileName;
+    std::string headerFileName;
+    std::string auxFileName;
+
     long totalOrderedRecords;
     long totalUnorderedRecords;
 
@@ -45,7 +48,7 @@ private:
     }
 
     void initializeFreeList() {
-        std::fstream header("data/header.bin", std::ios::out);
+        std::fstream header(this->headerFileName, std::ios::out);
         long headerPointer = -1;
         header.seekp(0);
         header.write((char *) &headerPointer, sizeof(headerPointer));
@@ -211,7 +214,7 @@ private:
     }
 
     long readHeader() {
-        std::fstream header("data/header.bin");
+        std::fstream header(this->headerFileName);
         long headerValue;
         header.seekg(0);
         header.read((char *) &headerValue, sizeof(headerValue));
@@ -220,7 +223,7 @@ private:
     }
 
     void writeHeader(long toDeleteLogPos) {
-        std::fstream header("data/header.bin");
+        std::fstream header(this->headerFileName);
         header.seekp(0);
         header.write((char *) &toDeleteLogPos, sizeof(toDeleteLogPos));
         header.close();
@@ -244,7 +247,7 @@ private:
 
     void rebuild(unsigned long totalLines) {
         std::fstream sequentialFile(this->sequentialFileName);
-        std::fstream auxFile("data/auxFile.bin", std::ios::out);
+        std::fstream auxFile(this->auxFileName, std::ios::out);
 
         RecordType record = this->read(this->sequentialFileName, this->getFirstRecordLogPos());
         while (record.next != -2) {
@@ -257,7 +260,7 @@ private:
         auxFile.close();
 
         sequentialFile.open(this->sequentialFileName, std::ios::out);
-        auxFile.open("data/auxFile.bin");
+        auxFile.open(this->auxFileName);
 
         long currentNext = 1;
         long currentPrev = -1;
@@ -348,6 +351,8 @@ public:
     SequentialFile(std::string inputFileName, std::string sequentialFileName) {
         this->inputFileName = inputFileName;
         this->sequentialFileName = sequentialFileName;
+        this->headerFileName = inputFileName.substr(0, inputFileName.size() - 4) + "Header.bin";
+        this->auxFileName = inputFileName.substr(0, inputFileName.size() - 4) + "AuxFile.bin";
 
         this->initializeSequentialFile();
         this->initializeFreeList();
