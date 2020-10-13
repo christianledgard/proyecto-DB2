@@ -173,6 +173,61 @@ Finalmente, se concluye  que la inserción tiene O(n).
 
 Para realizar el algorítmo de eliminación seguimos el siguiente Pseudocódigo adaptado de Folk, Zoellick and Riccardi (1998). 
 
+La función es ``` bool removeRecord(KeyType key) ``` retorna True si se pudo eliminar, caso contrario, False.
+
+El algoritmo funciona de la siguiente manera:
+
+
+Dado un bucket, este tiene un buddy si:
+
+```
+buddy= swap the first bit of i
+if(bucket[i]!=bucket[buddy]) then
+    bucket de buddy es el buddyBucket
+else 
+    no existe un buddyBucket
+```
+
+
+Ahora que ya sabemos determinar si un bucket tiene un buddyBucket, para poder afirmar que se puede comprimir el IndexFile, ningún bucket debe tener buddyBucket
+
+```
+bool collapse(){
+        bool canColapse=false;
+        if(globalDepth>1){
+            canColapse=true;
+            long halfSize= pow(2,globalDepth)/2;
+            fstream file;
+            file.open(hashFile,ios::binary |ios::in);
+
+            char hashValue[globalDepth], buddyHashValue[globalDepth];
+            for(long i=0;i<halfSize;++i){
+                file.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*i,ios::beg);
+                long localDepth,localDepthBuddy;
+                file.read((char*)&hashValue,+ sizeof(char)*globalDepth);
+                file.read((char*)&localDepth,sizeof(long));
+                file.seekg(sizeof(long)*2+(sizeof(char)*globalDepth+sizeof(long))*(i+pow(2,globalDepth-1)),ios::beg);
+                file.read((char*)&buddyHashValue,+ sizeof(char)*globalDepth);
+                file.read((char*)&localDepthBuddy,sizeof(long));
+
+
+                string bucketName= hashString.substr(globalDepth-localDepth,globalDepth);
+                string bucketBuddyName= buddyHashString.substr(globalDepth-localDepthBuddy,globalDepth);
+
+                if(bucketBuddyName!=bucketName){
+                    canColapse= false;
+                    return canColapse;
+                }
+            }
+            rebuildColapse();
+        }
+        return canColapse;
+    }
+```
+
+En caso, se cumpla la condición mencionada, se hace el rebuild, que funciona de forma similar que en el Insert, pero en vez de depublicar las entradas, se parten por la mitad. Esto ocurre en O(n)
+
+La eliminación como tal, busca el registro, en caso lo encuentre, lo marca como eliminado en su Bucket (mecanísmo FreeList). Luego ejecuta TryCombine
 ```
 eliminar(key):
     key = search(key);
@@ -182,13 +237,32 @@ eliminar(key):
         remove key from bucket;
         tryCombine(bucket);
     }
-    
+```
+En C++ el código es: 
+
+```
+   bool removeRecord(KeyType key){
+        pair<RecordType*,string> recordAndBuffer=getRecordAndBuffer(key);
+        if(recordAndBuffer.first!=nullptr){
+            deleteRecordFromFile(key,recordAndBuffer.second);
+            tryCombine(key,recordAndBuffer.second);
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+```
+
+El pseudocódigo de TryCombine es:
+
+```
 tryCombine(bucket):
     if(bucket a tiene bucket hermano b)
     {
         if(a.numkeys + b.numkeys)
         {
-            combine buckets a y b en a;
+            Merge buckets a y b en a; 
             try to collapse the directory;
             if(directory was collapsed)
             {
@@ -198,8 +272,11 @@ tryCombine(bucket):
     }
 
 ```
+Se llama recursivamente para hacer merge de los buckets tanto como sea posible, luego de cada merge se comprueba si es posible comprimir el el IndexFile, de tal forma se hace merge y compresión del IndexFile tantas veces como sea posible, con el fin de reducir el Hash.
 
+De tal forma, lo que determina el costo de la eliminación es el Merge de los buckets y la compresión del IndexFile O(n)
 
+Por ende, se concluye que la eliminación ocurre en O(n).
 
 # Resultados Experimentales
 - Cuadro y/o gráfico comparativo de desempeño de las técnicas de indexación de archivos sobre el dominio de datos. Tanto para inserción como para búsqueda.
