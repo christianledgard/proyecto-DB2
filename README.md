@@ -26,9 +26,9 @@ En primer lugar esperamos obtener un tiempo de búsqueda menor en la estructura 
 
 ### Extendible Hashing
 
-- Búsqueda O(1)
-- Inserción O(n)   // Split bucket y Reescalar (agrandar) IndexFile
-- Eliminación O(n) // Merge buckets y Reescalar (reducir) IndexFile
+- Búsqueda ```O(1)```
+- Inserción ```O(n)```   Split bucket y Reescalar (agrandar) IndexFile
+- Eliminación ```O(n)``` Merge buckets y Reescalar (reducir) IndexFile
 
 
 # Descripción de las operaciones
