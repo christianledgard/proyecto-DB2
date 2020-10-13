@@ -514,6 +514,54 @@ public:
         }
     }
 
+    void print(){
+        cout<<"INDEX FILE\n";
+        cout<<"---------------\n";
+        fstream hash;
+        hash.open(hashFile,ios::binary | ios::in);
+        char index[globalDepth];
+        long localDepth;
+        hash.seekg(sizeof(long)*2);
+        set<string> buckets;
+
+        while(hash.read((char*)& index,sizeof(char)*globalDepth)){
+            hash.read((char*)& localDepth,sizeof(long));
+
+            string indexString;
+
+            for(auto it:index)
+                indexString+=it;
+
+            string bucket=indexString.substr(globalDepth-localDepth,globalDepth);
+            cout<<indexString<<" | "<<localDepth<<" | "<<bucket<<endl;
+            buckets.insert(bucket);
+        }
+        cout<<"---------------\n";
+        for(const auto& it:buckets){
+            fstream file;
+            file.open(it+".dat", ios::binary | ios::in);
+            long size,header;
+            file.read((char*)&size,sizeof(long));
+            file.read((char*)&header,sizeof(long));
+            cout<<"BUCKET NAME: "<<it<<" | SIZE: "<<size<<" | HEADER: "<<header<<"\n\n";
+            RecordType record;
+            long contador=0;
+            while (file.read((char*)&record,sizeof(RecordType))){
+                cout<<record.ID<<" "<<record.prevDelete<<endl;
+                contador++;
+            }
+            if(contador==0)
+                cout<<"EMPTY BUCKET"<<endl;
+            cout<<"---------------\n";
+            file.close();
+        }
+
+
+        cout<<"\n\n\n----------------------";
+        cout<<"----------------------\n";
+    }
+
+
     ~ExtendibleHash()=default;
 };
 
@@ -527,20 +575,6 @@ int main(){
     remove("110.dat");
     remove("test.dat");
     ExtendibleHash<Record<long>> hash(1,2,"test.dat");
-   // ExtendibleHash<Player<long>> hashPlayer(1,1,"player.dat");
-
-//    hash.insertRecord(Record<long>(16));
-//    hash.insertRecord(Record<long>(4));
-//    hash.insertRecord(Record<long>(6));
-//    hash.insertRecord(Record<long>(22));
-//    hash.insertRecord(Record<long>(24));
-//    hash.insertRecord(Record<long>(10));
-//    hash.insertRecord(Record<long>(31));
-//    hash.insertRecord(Record<long>(7));
-//    hash.insertRecord(Record<long>(9));
-//    hash.insertRecord(Record<long>(20));
-//    hash.removeRecord(24);
-//    //hash.insertRecord(Record<long>(26));
 
 
     hash.insertRecord(Record<long>(16));
@@ -551,12 +585,13 @@ int main(){
     hash.insertRecord(Record<long>(22));
     hash.insertRecord(Record<long>(31));
     hash.insertRecord(Record<long>(7));
-//    hash.removeRecord(16);
-//    hash.removeRecord(24);
-//    hash.removeRecord(10);
-//    hash.removeRecord(26);
-    //hash.insertRecord(Record<long>(26));
+    hash.print();
 
+    hash.removeRecord(16);
+    hash.removeRecord(24);
+    hash.removeRecord(10);
+    hash.removeRecord(26);
+    hash.print();
 
 
     return 0;
