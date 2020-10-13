@@ -5,8 +5,6 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-    this->teamsSequentialFile = SequentialFile<Team<long>>("/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/Teams.bin", "/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/TeamsSequentialFile.bin");
-    this->playersSequentialFile = SequentialFile<Player<long>>("/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/Players.bin", "/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/PlayersSequentialFile.bin");
     this->hash = ExtendibleHash<PlayerHash<long>>("test.dat");
     ui->setupUi(this);
     this->on_recargar_clicked();
@@ -60,13 +58,8 @@ void MainWindow::refresh(QTableWidget *tableWidget, std::string fileName)
     }
 }
 
-void MainWindow::refreshFromBinaryPlayer(QTableWidget *tableWidget, std::string fileName){
-    std::ifstream file(fileName, std::ios::binary);
-    Player<long> registro;
-    std::vector<Player<long>> registros;
-    while (file.read((char *) &registro, sizeof(Player<long>))){
-        registros.push_back(registro);
-    }
+void MainWindow::refreshFromBinaryPlayer(QTableWidget *tableWidget){
+    std::vector<Player<long>> registros = playersSequentialFile.load();
     tableWidget->setRowCount(0);
     tableWidget->setColumnCount(11);
     tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("ID"));
@@ -100,13 +93,8 @@ void MainWindow::refreshFromBinaryPlayer(QTableWidget *tableWidget, std::string 
 
 }
 
-void MainWindow::refreshFromBinaryTeams(QTableWidget *tableWidget, std::string fileName){
-    std::ifstream file(fileName, std::ios::binary);
-    Team<long> registro;
-    std::vector<Team<long>> registros;
-    while (file.read((char *) &registro, sizeof(Team<long>))){
-        registros.push_back(registro);
-    }
+void MainWindow::refreshFromBinaryTeams(QTableWidget *tableWidget){
+    std::vector<Team<long>> registros = teamsSequentialFile.load();
     tableWidget->setRowCount(0);
     tableWidget->setColumnCount(13);
     tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("ID"));
@@ -194,10 +182,10 @@ void MainWindow::refreshFromBinaryPlayerHASH(QTableWidget *tableWidget, std::str
 
 void MainWindow::on_recargar_clicked()
 {
-    //refresh(ui->tableWidgetPlayers,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/Players.csv");
-    //refresh(ui->tableWidgetTeams,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/Teams.csv");
-    refreshFromBinaryPlayer(ui->tableWidgetPlayers,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/PlayersSequentialFile.bin");
-    refreshFromBinaryTeams(ui->tableWidgetTeams,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/TeamsSequentialFile.bin");
+    //refresh(ui->tableWidgetPlayers,"data/Players.csv");
+    //refresh(ui->tableWidgetTeams,"data/Teams.csv");
+    refreshFromBinaryPlayer(ui->tableWidgetPlayers);
+    refreshFromBinaryTeams(ui->tableWidgetTeams);
 }
 
 void MainWindow::generatePlayer(Player<long> it)
@@ -238,37 +226,33 @@ void MainWindow::generateTeams(Team<long> it)
 
 void MainWindow::addTeams(std::vector<std::string> results)
 {
-    Team<long> temp;
-    temp.ID=stol(results[4]);
-    std::strcpy(temp.team,results[5].c_str());
-    temp.ranking = stol(results[6]);
-    temp.games = stol(results[7]);
-    temp.wins = stol(results[8]);
-    temp.draws = stol(results[9]);
-    temp.losses = stol(results[10]);
-    temp.goalsFor = stol(results[11]);
-    temp.goalsAgainst = stol(results[12]);
-    temp.yellowCards = stol(results[13]);
-    temp.redCards = stol(results[14]);
+    Team<long> temp(stol(results[4]),
+                    results[5].c_str(),
+                    stol(results[6]),
+                    stol(results[7]),
+                    stol(results[8]),
+                    stol(results[9]),
+                    stol(results[10]),
+                    stol(results[11]),
+                    stol(results[12]),
+                    stol(results[13]),
+                    stol(results[14]));
     teamsSequentialFile.insert(temp);
     this->on_recargar_clicked();
 }
 
 void MainWindow::addPlayers(std::vector<std::string> results)
 {
-    Team<long> temp;
-    temp.ID=stol(results[4]);
-    std::strcpy(temp.team,results[5].c_str());
-    temp.ranking = stol(results[6]);
-    temp.games = stol(results[7]);
-    temp.wins = stol(results[8]);
-    temp.draws = stol(results[9]);
-    temp.losses = stol(results[10]);
-    temp.goalsFor = stol(results[11]);
-    temp.goalsAgainst = stol(results[12]);
-    temp.yellowCards = stol(results[13]);
-    temp.redCards = stol(results[14]);
-    teamsSequentialFile.insert(temp);
+    Player<long> temp(stol(results[4]),
+            results[5].c_str(),
+            results[6].c_str(),
+            results[7].c_str(),
+            stol(results[8]),
+            stol(results[9]),
+            stol(results[10]),
+            stol(results[11]),
+            stol(results[12]));
+    playersSequentialFile.insert(temp);
     this->on_recargar_clicked();
 }
 
@@ -285,7 +269,7 @@ void MainWindow::addPlayersHASH(std::vector<std::string> results)
     temp.tackles = stol(results[11]);
     temp.saves = stol(results[12]);
     hash.insertRecord(temp);
-    refreshFromBinaryPlayerHASH(ui->tableWidgetPlayers,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/PlayersSequentialFile.bin");
+    refreshFromBinaryPlayerHASH(ui->tableWidgetPlayers,"data/PlayersSequentialFile.bin");
 }
 
 void MainWindow::on_pushButton_clicked()
@@ -310,35 +294,52 @@ void MainWindow::on_pushButton_clicked()
     if(results[0]=="SELECT"){
         qDebug() << "SELECT";
 
-        if(results[3]=="players"){
-            generatePlayer(playersSequentialFile.searchInOrderedRecords(stol(results[7])));
-        }else if(results[3]=="teams"){
-            generateTeams(teamsSequentialFile.searchInOrderedRecords(stol(results[7])));
-        } else {
-            errorDeFormato.setText("Error en el nombre de la tabla.");
+        try {
+            if(results[3]=="players"){
+                generatePlayer(playersSequentialFile.search(stol(results[7])));
+            }else if(results[3]=="teams"){
+                generateTeams(teamsSequentialFile.search(stol(results[7])));
+            } else {
+                errorDeFormato.setText("Error en el nombre de la tabla.");
+                errorDeFormato.exec();
+            }
+        }  catch (...) {
+            errorDeFormato.setText("El ID a buscar no existe.");
             errorDeFormato.exec();
         }
 
-
     }else if(results[0]=="DELETE"){
-        qDebug() << "DELETE";
-
         if(results[2]=="players"){
-            qDebug() << "players";
+            playersSequentialFile.deleteRecord(stol(results[6]));
+            errorDeFormato.setText( QString("El elemento con el ID ") + results[6].c_str() + QString(" se eliminó correctamente."));
+            errorDeFormato.exec();
+            this->on_recargar_clicked();
         }else if(results[2]=="teams"){
-            qDebug() << "teams";
+            teamsSequentialFile.deleteRecord(stol(results[6]));
+            errorDeFormato.setText( QString("El elemento con el ID ") + results[6].c_str() + QString(" se eliminó correctamente."));
+            errorDeFormato.exec();
+            this->on_recargar_clicked();
         } else {
             errorDeFormato.setText("Error en el nombre de la tabla.");
             errorDeFormato.exec();
         }
 
     }else if(results[0]=="INSERT"){
-        if(results[2]=="players"){
-            addPlayers(results);
-        }else if(results[2]=="teams"){
-            addTeams(results);
-        } else {
-            errorDeFormato.setText("Error en el nombre de la tabla.");
+        try {
+            if(results[2]=="players"){
+                addPlayers(results);
+                errorDeFormato.setText(results[5].c_str() + QString(" se insertó correctamente"));
+                errorDeFormato.exec();
+            }else if(results[2]=="teams"){
+                addTeams(results);
+                errorDeFormato.setText(results[5].c_str() + QString(" se insertó correctamente"));
+                errorDeFormato.exec();
+            } else {
+                errorDeFormato.setText("Error en el nombre de la tabla.");
+                errorDeFormato.exec();
+            }
+        }  catch (...) {
+            errorDeFormato.setText("Error en el insertado. No puedes insertar un elemento que ya existe.");
             errorDeFormato.exec();
         }
 
@@ -351,7 +352,7 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_pushButtonHash_clicked()
 {
-    refreshFromBinaryPlayerHASH(ui->tableWidgetPlayers,"/Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/data/PlayersSequentialFile.bin");
+    refreshFromBinaryPlayerHASH(ui->tableWidgetPlayers,"data/PlayersSequentialFile.bin");
     QMessageBox errorDeFormato;
     errorDeFormato.setText("Error en el input.");
 

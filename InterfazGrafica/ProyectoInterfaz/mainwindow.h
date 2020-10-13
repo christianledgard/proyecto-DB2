@@ -16,9 +16,11 @@
 #include <QMessageBox>
 
 //#include "Record.h"
-#include "SequentialFile/SequentialFile.h"
+//#include "SequentialFile/SequentialFile.h"
 #include "Hash/ExtendibleHashing.h"
 
+#include "../../../../SequentialFile/SequentialFile.h"
+#include "../../../../SequentialFile/Record.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -27,8 +29,8 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    SequentialFile<Team<long>> teamsSequentialFile;
-    SequentialFile<Player<long>> playersSequentialFile;
+    SequentialFile<Team<long> > teamsSequentialFile  = SequentialFile<Team<long> >("data/Teams.bin", "data/TeamsSequentialFile.bin");
+    SequentialFile<Player<long> > playersSequentialFile  = SequentialFile<Player<long> >("data/Players.bin","data/PlayersSequentialFile.bin");
     ExtendibleHash<PlayerHash<long>> hash;
 
 public:
@@ -36,8 +38,8 @@ public:
     ~MainWindow();
 
     void refresh(QTableWidget *tableWidget, std::string fileName);
-    void refreshFromBinaryPlayer(QTableWidget *tableWidget, std::string fileName);
-    void refreshFromBinaryTeams(QTableWidget *tableWidget, std::string fileName);
+    void refreshFromBinaryPlayer(QTableWidget *tableWidget);
+    void refreshFromBinaryTeams(QTableWidget *tableWidget);
     void generatePlayer(Player<long> it);
     void generateTeams(Team<long> it);
     void addTeams(std::vector<std::string> results);

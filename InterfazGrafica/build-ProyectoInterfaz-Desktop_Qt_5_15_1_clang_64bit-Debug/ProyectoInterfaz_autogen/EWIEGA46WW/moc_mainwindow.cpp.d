@@ -223,7 +223,6 @@
   /Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/Hash/Bucket.h \
   /Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/Hash/ExtendibleHashing.h \
   /Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/Hash/RecordHash.h \
-  /Users/christianledgard/Documents/2020-II/DBII/Proyecto/proyecto-DB2/InterfazGrafica/ProyectoInterfaz/SequentialFile/SequentialFile.h \
   /Users/christianledgard/Downloads/stdc++.h \
   /Users/christianledgard/Qt/5.15.1/clang_64/lib/QtCore.framework/Versions/5/Headers/QDebug \
   /Users/christianledgard/Qt/5.15.1/clang_64/lib/QtCore.framework/Versions/5/Headers/QFile \
