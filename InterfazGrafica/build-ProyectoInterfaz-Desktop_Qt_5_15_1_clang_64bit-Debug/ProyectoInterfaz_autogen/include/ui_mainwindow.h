@@ -49,8 +49,9 @@ public:
     QHBoxLayout *horizontalLayout_2;
     QTableWidget *tableWidgetTeams;
     QWidget *hashPage;
-    QPlainTextEdit *consultaHashOut;
+    QVBoxLayout *verticalLayout;
     QLabel *label;
+    QPlainTextEdit *consultaHashOut;
     QMenuBar *menubar;
     QMenu *menuDB_II;
     QStatusBar *statusbar;
@@ -127,13 +128,22 @@ public:
         tabWidget->addTab(teams, QString());
         hashPage = new QWidget();
         hashPage->setObjectName(QString::fromUtf8("hashPage"));
-        consultaHashOut = new QPlainTextEdit(hashPage);
-        consultaHashOut->setObjectName(QString::fromUtf8("consultaHashOut"));
-        consultaHashOut->setGeometry(QRect(10, 40, 721, 291));
-        consultaHashOut->setReadOnly(true);
+        verticalLayout = new QVBoxLayout(hashPage);
+        verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
         label = new QLabel(hashPage);
         label->setObjectName(QString::fromUtf8("label"));
-        label->setGeometry(QRect(20, 20, 231, 16));
+
+        verticalLayout->addWidget(label);
+
+        consultaHashOut = new QPlainTextEdit(hashPage);
+        consultaHashOut->setObjectName(QString::fromUtf8("consultaHashOut"));
+        consultaHashOut->setFrameShape(QFrame::Box);
+        consultaHashOut->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+        consultaHashOut->setReadOnly(true);
+        consultaHashOut->setOverwriteMode(true);
+
+        verticalLayout->addWidget(consultaHashOut);
+
         tabWidget->addTab(hashPage, QString());
 
         verticalLayout_3->addWidget(tabWidget);

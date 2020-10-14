@@ -39,12 +39,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="118"/>
+        <location filename="mainwindow.ui" line="99"/>
         <source>Visualización de la Consulta HASH</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="139"/>
+        <location filename="mainwindow.ui" line="138"/>
         <source>DB II</source>
         <translation type="unfinished"></translation>
     </message>

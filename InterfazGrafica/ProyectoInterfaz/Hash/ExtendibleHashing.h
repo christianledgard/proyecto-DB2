@@ -29,6 +29,8 @@ template <typename RecordType>
 struct ExtendibleHash{
 public:
     typedef typename RecordType::KeyType KeyType;
+    ExtendibleHash(){}
+
 private:
     long globalDepth=0;
     long blockFactor=0;
@@ -567,6 +569,74 @@ public:
 
         cout<<"\n\n\n----------------------";
         cout<<"----------------------\n";
+    }
+
+
+    string printToString(){
+        string result;
+        result = "INDEX FILE\n";
+        result += "---------------\n";
+        fstream hash;
+        hash.open(hashFile,ios::binary | ios::in);
+        char index[globalDepth];
+        long localDepth;
+        hash.seekg(sizeof(long)*2);
+        set<string> buckets;
+
+        while(hash.read((char*)& index,sizeof(char)*globalDepth)){
+            hash.read((char*)& localDepth,sizeof(long));
+
+            string indexString;
+
+            for(auto it:index)
+                indexString+=it;
+
+            string bucket=indexString.substr(globalDepth-localDepth,globalDepth);
+            result += indexString;
+            result +=" | ";
+            result += std::to_string(localDepth);
+            result +=" | ";
+            result += bucket;
+            result += "\n";
+            buckets.insert(bucket);
+        }
+        result +="---------------\n";
+        for(const auto& it:buckets){
+            fstream file;
+            file.open(it+".dat", ios::binary | ios::in);
+            long size,header;
+            file.read((char*)&size,sizeof(long));
+            file.read((char*)&header,sizeof(long));
+            result += "BUCKET NAME: ";
+            result +=  it;
+            result += " | SIZE: ";
+            result += std::to_string(size);
+            result += " | HEADER: ";
+            result += std::to_string(header);
+            result += "\n\n";
+            RecordType record;
+            long contador=0;
+            while (file.read((char*)&record,sizeof(RecordType))){
+                result += std::to_string(record.ID);
+                result += " ";
+                result += std::to_string(record.prevDelete);
+                result += "\n";
+                contador++;
+            }
+            if(contador==0){
+                result += "EMPTY BUCKET";
+                result += "\n";
+            }
+                
+            result += "---------------\n";
+            file.close();
+        }
+
+
+        result += "\n\n\n----------------------";
+        result += "----------------------\n";
+
+        return result;
     }
 
 
