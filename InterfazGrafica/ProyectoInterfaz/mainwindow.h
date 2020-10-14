@@ -31,7 +31,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
     SequentialFile<Team<long> > teamsSequentialFile  = SequentialFile<Team<long> >("data/Teams.bin", "data/TeamsSequentialFile.bin");
     SequentialFile<Player<long> > playersSequentialFile  = SequentialFile<Player<long> >("data/Players.bin","data/PlayersSequentialFile.bin");
-    ExtendibleHash<RecordHash<long> > hash =  ExtendibleHash<RecordHash<long>>(1,2,"test.dat");
+    ExtendibleHash<RecordHash<long> > hash;
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -49,9 +49,7 @@ public:
 
 
     void generatePlayer();
-
     void generateTeams();
-
     void addTeams();
 
 private slots:

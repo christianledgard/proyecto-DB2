@@ -185,6 +185,8 @@ void MainWindow::on_recargar_clicked()
     //refresh(ui->tableWidgetTeams,"data/Teams.csv");
     refreshFromBinaryPlayer(ui->tableWidgetPlayers);
     refreshFromBinaryTeams(ui->tableWidgetTeams);
+    ui->consultaHashOut->clear();
+
 }
 
 void MainWindow::generatePlayer(Player<long> it)
@@ -351,6 +353,7 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_pushButtonHash_clicked()
 {
+    this->hash =  ExtendibleHash<RecordHash<long>>(1,2,"test.dat");
     QMessageBox errorDeFormato;
     errorDeFormato.setText("Error en el input.");
 
@@ -366,27 +369,40 @@ void MainWindow::on_pushButtonHash_clicked()
     std::istringstream iss(s);
     std::vector<std::string> results(std::istream_iterator<std::string>{iss},
                                      std::istream_iterator<std::string>());
-
-     remove("000.dat");
-     remove("1.dat");
-     remove("0.dat");
-     remove("10.dat");
-     remove("010.dat");
-     remove("100.dat");
-     remove("110.dat");
-     remove("test.dat");
-
-    if(results[0]=="DELETE"){
-        //hash.removeRecord(stol(results[1].c_str()));
-
-    }else if(results[0]=="INSERT"){
-        //hash.insertRecord(RecordHash<long>(stol(results[1].c_str())));
-
-    } else {
-        errorDeFormato.setText("Error en el método SELECT, DELETE o INSERT.");
-        errorDeFormato.exec();
+    string actual;
+    for(auto &elemento : results){
+        if(elemento == "INSERT" or actual == "INSERT"){
+            if(elemento == "DELETE"){
+                actual = "DELETE";
+                continue;
+            }
+            actual = "INSERT";
+            if(elemento != "INSERT"){
+                hash.insertRecord(RecordHash<long>(stol(elemento.c_str())));
+            }
+        }else if(elemento == "DELETE" or actual == "DELETE"){
+            if(elemento == "INSERT"){
+                actual = "INSERT";
+                continue;
+            }
+            actual = "DELETE";
+            if(elemento != "DELETE"){
+                hash.removeRecord(stol(elemento.c_str()));
+            }
+        }
     }
 
+    hash.print();
+    ui->consultaHashOut->setPlainText(QString::fromStdString(hash.printToString()));
 
+
+    remove("000.dat");
+    remove("1.dat");
+    remove("0.dat");
+    remove("10.dat");
+    remove("010.dat");
+    remove("100.dat");
+    remove("110.dat");
+    remove("test.dat");
 
 }
