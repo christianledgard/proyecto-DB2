@@ -292,9 +292,13 @@ Los tiempo de ejecución estan medidos en microsegundos (ms) y los accesos a dis
 
 ![Alt_text](https://i.ibb.co/r46mCgq/time-search.png)
 
+Se puede observar que el tiempo de búsqueda es constante en todos los casos, sin importar la cantidad de registros **```O(1)```**
+
 **Accesos a disco search**
 
 ![Alt_text](https://i.ibb.co/HFtGwXd/memory-busqueda.png)
+
+Se puede observar que la cantidad de accesos a disco de la búsqueda es constante en todos los casos, sin importar la cantidad de registros **```O(1)```**
 
 ### Insert
 
