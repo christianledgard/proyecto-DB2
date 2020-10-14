@@ -306,9 +306,13 @@ Se puede observar que la cantidad de accesos a disco de la búsqueda es constant
 
 ![Alt_text](https://i.ibb.co/GskrKpb/Time-insert.png)
 
+Se puede observar que en el mejor y caso promedio, el tiempo de ejecución es aproximadamente **```O(1)```**, ya que no existe alguna operación que haga más prolongada la ejecución, por otra parte, cada cierta cantidad de inserciones existen picos pequeños y grandes, los picos pequeños se deben al ```splitBucket``` y los picos grandes se deben a la reestructuración del IndexFile, lo cual tiene un comportamiento **```O(n)```**.
+
 **Accesos a disco insert**
 
 ![Alt_text](https://i.ibb.co/M10HnD4/memory-insert.png)
+
+Se puede observar que en el mejor y caso promedio, la cantidad de lecturas a disco es aproximadamente **```O(1)```**, ya que no se efectua ```splitBucket``` o ```rebuildIndexFile```, por otra parte, cada cierta cantidad de inserciones existen picos pequeños y grandes, los picos pequeños se deben al ```splitBucket``` y los picos grandes se deben a la reestructuración del IndexFile, lo cual tiene un comportamiento **```O(n)```**. La línea azul abajo es debido a las inserciones fallidas de registros ya existentes, dichas inserciones fallidas ocurren en **```O(1)```**
 
 ### Remove
 
@@ -316,9 +320,13 @@ Se puede observar que la cantidad de accesos a disco de la búsqueda es constant
 
 ![Alt_text](https://i.ibb.co/znyW3Fc/time-remove.png)
 
+El tiempo de ejecución del remove tiene picos altos, que ocurren cuando se ejecuta un ```collapseIndexFile```, lo cual es relativamente pesado y ocurre en **```O(n)```**, dichas operaciones ocurren inmediatamente después de un ```mergeBuckets```, por lo que previo a cada pico alto, ocurre un incremento progresivo en el tiempo de ejecución. Cuando el remover realiza el mejor caso, se trata de **```O(1)```**
+
 **Accesos a disco remove**
 
 ![Alt_text](https://i.ibb.co/5Wx58fz/memory-remove.png)
+
+La cantidad de lecturas a disco del remove tiene picos altos, que ocurren cuando se ejecuta un ```collapseIndexFile```, lo cual accede a discos muchas veces y ocurre en **```O(n)```**, dichas operaciones ocurren inmediatamente después de un ```mergeBuckets```, por lo que previo a cada pico alto, ocurre un incremento progresivo en las lecturas a disco. Cuando el remover realiza el mejor caso, se trata de **```O(1)```**, lo cual se observa en las zonas planas, esto ocurre entre 2000 y 4000 registros aproximadamente.
 
 # Pruebas de uso y presentación
 
