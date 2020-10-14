@@ -15,6 +15,7 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
@@ -47,6 +48,9 @@ public:
     QWidget *teams;
     QHBoxLayout *horizontalLayout_2;
     QTableWidget *tableWidgetTeams;
+    QWidget *hashPage;
+    QPlainTextEdit *consultaHashOut;
+    QLabel *label;
     QMenuBar *menubar;
     QMenu *menuDB_II;
     QStatusBar *statusbar;
@@ -121,6 +125,16 @@ public:
         horizontalLayout_2->addWidget(tableWidgetTeams);
 
         tabWidget->addTab(teams, QString());
+        hashPage = new QWidget();
+        hashPage->setObjectName(QString::fromUtf8("hashPage"));
+        consultaHashOut = new QPlainTextEdit(hashPage);
+        consultaHashOut->setObjectName(QString::fromUtf8("consultaHashOut"));
+        consultaHashOut->setGeometry(QRect(10, 40, 721, 291));
+        consultaHashOut->setReadOnly(true);
+        label = new QLabel(hashPage);
+        label->setObjectName(QString::fromUtf8("label"));
+        label->setGeometry(QRect(20, 20, 231, 16));
+        tabWidget->addTab(hashPage, QString());
 
         verticalLayout_3->addWidget(tabWidget);
 
@@ -144,7 +158,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(0);
+        tabWidget->setCurrentIndex(2);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -158,6 +172,8 @@ public:
         recargar->setText(QCoreApplication::translate("MainWindow", "Recargar", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(players), QCoreApplication::translate("MainWindow", "Players", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(teams), QCoreApplication::translate("MainWindow", "Teams", nullptr));
+        label->setText(QCoreApplication::translate("MainWindow", "Visualizaci\303\263n de la Consulta HASH", nullptr));
+        tabWidget->setTabText(tabWidget->indexOf(hashPage), QCoreApplication::translate("MainWindow", "HASH Test", nullptr));
         menuDB_II->setTitle(QCoreApplication::translate("MainWindow", "DB II", nullptr));
     } // retranslateUi
 
