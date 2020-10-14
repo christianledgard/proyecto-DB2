@@ -282,7 +282,10 @@ Por ende, se concluye que la eliminación ocurre en O(n).
 
 # Resultados Experimentales
 
+
 ## Hashing
+
+Los tiempo de ejecución estan medidos en microsegundos (ms) y los accesos a disco hacen referencia a las operaciones read y write sobre el disco duro. Las líneas naranja hacen referencia a la cantidad de registros almacenados en la estructura, mientras que los puntos azules hacen referencia al tiempo y accesos a disco respectivamente.
 
 ### Search 
 **Time search**
