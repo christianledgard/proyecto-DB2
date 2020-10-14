@@ -281,9 +281,25 @@ De tal forma, lo que determina el costo de la eliminación es el Merge de los bu
 Por ende, se concluye que la eliminación ocurre en O(n).
 
 # Resultados Experimentales
-- Cuadro y/o gráfico comparativo de desempeño de las técnicas de indexación de archivos sobre el dominio de datos. Tanto para inserción como para búsqueda.
-- Considerar dos métricas: total de accesos a disco duro (read & write) y tiempo de ejecución en milisegundos.
-- Discusión y Análisis de los resultados experimentales.
+
+## Hashing
+
+### Search 
+Time search ![Alt_text](https://i.ibb.co/r46mCgq/time-search.png)
+
+Accesos a disco search ![Alt_text] (https://i.ibb.co/HFtGwXd/memory-busqueda.png)
+
+### Insert
+
+Time insert ![Alt_text] (https://i.ibb.co/GskrKpb/Time-insert.png)
+
+Accesos a disco insert  ![Alt_text] (https://i.ibb.co/M10HnD4/memory-insert.png)
+
+### Remove
+
+Time remove ![Alt_text](https://i.ibb.co/znyW3Fc/time-remove.png)
+
+Accesos a disco remove  ![Alt_text] (https://i.ibb.co/5Wx58fz/memory-remove.png)
 
 # Pruebas de uso y presentación
 
