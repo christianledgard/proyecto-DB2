@@ -410,6 +410,8 @@ public:
                 current = this->read(this->sequentialFileName, current.next);
             }
         }
+
+        return current;
     }
 
     std::vector<RecordType> searchByRanges(KeyType begin, KeyType end) {
@@ -440,6 +442,9 @@ public:
 
     void deleteRecord(KeyType ID) {
         RecordType toDelete = this->search(ID);
+        if (toDelete.ID != ID) {
+            return;
+        }
         long toDeleteLogPos = this->getLogicalPosition(toDelete);
 
         this->updatePointersDelete(toDelete, toDeleteLogPos);

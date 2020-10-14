@@ -11,14 +11,11 @@ int main() {
 
     SequentialFile<Player<long> > playersSequentialFile = SequentialFile<Player<long> >("data/Players.bin", "data/PlayersSequentialFile.bin");
 
-    std::vector<long> insertTimes, searchTimes, insertDiskAccess, searchDiskAccess;
+    std::vector<long> insertTimes, searchTimes, insertDiskAccess, searchDiskAccess, deleteTimes, deleteDiskAccess;
 
     for (long i = 0; i < MAX_OPERATIONS; ++i) {
         auto t1 = std::chrono::high_resolution_clock::now();
-        if (i == 6) {
-            std::vector<Player<long> > players = playersSequentialFile.load();
-            shortPrintPlayers(players, playersSequentialFile.getTotalOrderedRecords());
-        }
+
         playersSequentialFile.insert(Player<long>(i/2,"APELLIDO" ,"EQUIPO", "POSICION", i, i, i, i, i));
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
@@ -44,6 +41,20 @@ int main() {
 
     writeCSV("test_results/time_search_sq.csv", searchTimes);
     writeCSV("test_results/disk_access_search_sq.csv", searchDiskAccess);
+
+    for (long i = 0; i < MAX_OPERATIONS; ++i) {
+        auto t1 = std::chrono::high_resolution_clock::now();
+        playersSequentialFile.deleteRecord(i/2);
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+        deleteTimes.push_back(duration);
+        deleteDiskAccess.push_back(totalDiskAccess);
+        totalDiskAccess = 0;
+        std::cout << "delete: " << i / 2 << " size: " << playersSequentialFile.getTotalOrderedRecords() <<std::endl;
+    }
+
+    writeCSV("test_results/time_delete_sq.csv", deleteTimes);
+    writeCSV("test_results/disk_access_delete_sq.csv", deleteDiskAccess);
 
     return 0;
 }

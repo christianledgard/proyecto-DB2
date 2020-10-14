@@ -26,7 +26,7 @@ void shortPrintPlayers(std::vector<Player<long> > players, unsigned long totalOr
             std::cout << "------------------------------------------------" << std::endl;
         }
         players[i].shortPrint();
-        std::cout << std::setw(4) << i << std::endl;
+        std::cout << " | " << std::setw(4) << i << std::endl;
     }
 }
 
