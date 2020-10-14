@@ -431,7 +431,7 @@ public:
         RecordType toDelete = this->search(ID);
 
         if (toDelete.ID != ID) {
-            throw std::out_of_range("Record with ID " + std::strtol(ID) + " not found.")
+            throw std::out_of_range("Record with ID " + std::to_string(ID) + " not found.");
         }
  
         long toDeleteLogPos = this->getLogicalPosition(toDelete);
