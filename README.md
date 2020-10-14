@@ -262,7 +262,7 @@ El pseudocódigo de TryCombine es:
 tryCombine(bucket):
     if(bucket a tiene bucket hermano b)
     {
-        if(a.numkeys + b.numkeys)
+        if(a.numkeys + b.numkeys <= globalDepth)
         {
             Merge buckets a y b en a; 
             try to collapse the directory;
@@ -282,10 +282,61 @@ Por ende, se concluye que la eliminación ocurre en O(n).
 
 # Resultados Experimentales
 
+Los tiempo de ejecución estan medidos en microsegundos (ms) y los accesos a disco hacen referencia a las operaciones read y write sobre el disco duro. Las líneas naranja hacen referencia a la cantidad de registros almacenados en la estructura, mientras que los puntos azules hacen referencia al tiempo y accesos a disco respectivamente.
+
+## Sequential File
+
+### Search
+
+**Time search**
+
+![Alt_text](https://i.ibb.co/3p0fMkn/time-search.jpg)
+
+En teoría, el tiempo de búsqueda es ```O(log(n) + m)```. Sin embargo, se puede observar que los tiempos en todos los casos no pasan de 1ms (con excepción de algunos outliers que demoran más de 1ms cuando se busca sobre 500 registros). Se puede concluir que la búsqueda es sumamente eficiente.
+
+**Accesos a disco search**
+
+![Alt_text](https://i.ibb.co/gtxyp5S/disk-access-search.jpg)
+
+Se puede observar que los accesos a disco se mantienen en ```O(1)``` sin importar la cantidad de registros.
+
+### Insert
+
+**Time insert**
+
+![Alt_text](https://i.ibb.co/whfc8mj/time-insert.jpg)
+
+En la gráfica se pueden observar los tiempos de inserción sin reconstrucción y de inserción con reconstrucción. La inserción con reconstrucción toma ```O(n)``` debido a que la reconstrucción del archivo toma un tiempo lineal. La inserción sin reconstrucción toma ```O(log(n) + m)```, sin embargo si nos fijamos únicamente la gráfica, podemos observar que como la ```m``` es muy pequeña (como máximo 5), la complejidad aparenta ser ```O(log(n))```.
+
+**Accesos a disco insert**
+
+![Alt_text](https://i.ibb.co/vQKzYJb/disk-access-insert.jpg)
+
+En la gráfica se pueden observar los accesos a disco de inserción sin reconstrucción y de inserción con reconstrucción. Los accesos a disco en la inserción con reconstrucción tiene una complejidad de ```O(n)```, debido a que se tienen que leer y volver a escribir todos los registros del archivo. Los accesos a disco en la inserción sin reconstrucción tiene una complejidad de ```O(log(n) + m)```, sin embargo en la gráfica aparente ser ```O(1)```.
+
+### Remove
+
+**Time remove**
+
+![Alt_text](https://i.ibb.co/VqbjXnm/time-remove.jpg)
+
+En la gráfica se puede observar la complejidad de tiempo para los dos casos de borrado. 
+
+El primero, es cuando se borra un registro de la zona ordenada del archivo. En este caso, se tiene que reconstruir el archivo, y por lo que esta operación toma ```O(n)```. Se puede observar cómo va disminuyendo la complejidad de tiempo a medida que disminuye la cantidad de registros en el Sequential File.
+
+El segundo caso, es cuando se borra un registro de la zona no ordenada. En este caso, se usa el free list implementado. Este caso de borrado toma ```O(log(n) + m)```. Se puede observar que sin importar la cantidad de registros en el archivo, el tiempo que toma este caso de eliminado se mantiene bajo los 10ms.
+
+**Accesos a disco remove**
+
+![Alt_text](https://i.ibb.co/pWcxQGT/disk-access-remove.jpg)
+
+En la gráfica se pueden observar los accesos a disco en para los dos casos de borrado.
+
+El primero, es cuando se borra un registro de la zona ordenada del archivo. En este caso, se tiene que reconstruir el archivo, y dado que se tiene que leer y escribir cada registro del archivo, los accesos a disco toman ```O(n)```. Se puede observar cómo van disminuyendo los accesos a disco a medida que disminuye la cantidad de registros en el Sequential File.
+
+El segundo caso, es cuando se borra un registro de la zona no ordenada. En este caso, se usa el free list implementado. Este caso de borrado los accesos a disco toman ```O(log(n) + m)```. Sin embargo, en la gráfica se puede observar los accesos a disco aparentan ser constantes.
 
 ## Hashing
-
-Los tiempo de ejecución estan medidos en microsegundos (ms) y los accesos a disco hacen referencia a las operaciones read y write sobre el disco duro. Las líneas naranja hacen referencia a la cantidad de registros almacenados en la estructura, mientras que los puntos azules hacen referencia al tiempo y accesos a disco respectivamente.
 
 ### Search 
 **Time search**
