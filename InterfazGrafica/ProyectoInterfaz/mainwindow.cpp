@@ -5,7 +5,6 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-    this->hash = ExtendibleHash<PlayerHash<long>>("test.dat");
     ui->setupUi(this);
     this->on_recargar_clicked();
 }
@@ -352,7 +351,6 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_pushButtonHash_clicked()
 {
-    refreshFromBinaryPlayerHASH(ui->tableWidgetPlayers,"data/PlayersSequentialFile.bin");
     QMessageBox errorDeFormato;
     errorDeFormato.setText("Error en el input.");
 
@@ -369,40 +367,20 @@ void MainWindow::on_pushButtonHash_clicked()
     std::vector<std::string> results(std::istream_iterator<std::string>{iss},
                                      std::istream_iterator<std::string>());
 
+     remove("000.dat");
+     remove("1.dat");
+     remove("0.dat");
+     remove("10.dat");
+     remove("010.dat");
+     remove("100.dat");
+     remove("110.dat");
+     remove("test.dat");
 
-    if(results[0]=="SELECT"){
-        qDebug() << "SELECT";
-
-        if(results[3]=="players"){
-
-        }else if(results[3]=="teams"){
-            qDebug() << "teams";
-        } else {
-            errorDeFormato.setText("Error en el nombre de la tabla.");
-            errorDeFormato.exec();
-        }
-
-
-    }else if(results[0]=="DELETE"){
-        qDebug() << "DELETE";
-
-        if(results[2]=="players"){
-            qDebug() << "players";
-        }else if(results[2]=="teams"){
-            qDebug() << "teams";
-        } else {
-            errorDeFormato.setText("Error en el nombre de la tabla.");
-            errorDeFormato.exec();
-        }
+    if(results[0]=="DELETE"){
+        //hash.removeRecord(stol(results[1].c_str()));
 
     }else if(results[0]=="INSERT"){
-        if(results[2]=="players"){
-            addPlayersHASH(results);
-        }else if(results[2]=="teams"){
-        } else {
-            errorDeFormato.setText("Error en el nombre de la tabla.");
-            errorDeFormato.exec();
-        }
+        //hash.insertRecord(RecordHash<long>(stol(results[1].c_str())));
 
     } else {
         errorDeFormato.setText("Error en el método SELECT, DELETE o INSERT.");

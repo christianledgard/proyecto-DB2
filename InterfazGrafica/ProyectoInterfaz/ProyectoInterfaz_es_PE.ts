@@ -34,7 +34,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="108"/>
+        <location filename="mainwindow.ui" line="93"/>
+        <source>HASH Test</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="118"/>
+        <source>Visualización de la Consulta HASH</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="139"/>
         <source>DB II</source>
         <translation type="unfinished"></translation>
     </message>
