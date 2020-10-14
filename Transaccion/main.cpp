@@ -61,13 +61,6 @@ int main()
   {
     pthread_join(thread_read[i],NULL);
   }
-  
-//   std::vector<Team<long> > teams = teamsSequentialFile.load();
-//   for (Team<long> team : teams) {
-//         Team<long> foundTeam = teamsSequentialFile.search(team.ID);
-//         foundTeam.shortPrint();
-//         std::cout << std::endl;
-//   }
 
   for(auto& response : responses) {
       response.shortPrint();
