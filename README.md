@@ -53,11 +53,70 @@ El método de búsqueda de un registro es ```RecordType search(KeyType ID)```.
 
 Primero se realiza una búsqueda binaria sobre la parte ordenada del archivo. En caso el registro a buscar no se encuentre en esta sección del archivo, se busca sobre la parte no ordenada del archivo siguiendo los punteros. En caso no se encuentre el archivo, se lanza una excepción.
 
+```
+RecordType search(KeyType ID) {
+    RecordType baseRecord = this->searchInOrderedRecords(ID);
+
+    if (baseRecord.ID == ID) {
+        return baseRecord;
+    }
+
+    if ((baseRecord.prev == -1 && ID < baseRecord.ID) || (baseRecord.next == -2 && ID > baseRecord.ID)) {
+        throw std::out_of_range("Search out of range. ID: " + std::to_string(ID));
+    }
+
+    if (baseRecord.ID > ID) {
+        baseRecord = this->getPrevRecord(baseRecord);
+    }
+
+    RecordType current = baseRecord;
+
+    current = this->read(this->sequentialFileName, current.next);
+    while (current.ID <= ID) {
+        if (current.ID == ID) {
+            return current;
+        } else {
+            current = this->read(this->sequentialFileName, current.next);
+        }
+    }
+
+    throw std::out_of_range("Search out of range. ID: " + std::to_string(ID));
+}
+```
+
 ### Búsqueda por rangos
 
 El método de búsqueda por rangos es ```std::vector<RecordType> searchByRanges(KeyType begin, KeyType end)```.
 
 Primero se realiza una búsqueda binaria sobre la parte ordenada del archivo para encontrar el registro base para realizar la búsqueda por rangos. Luego, se va iterando a través de los punteros ```next``` de los registros al mismo tiempo que se agregan los registros que están dentro del rango a un vector. Cuando el registro actual ya se haya pasado del rango o se haya llegado al último registro, se retorna el vector con los registros encontrados.
+
+```
+std::vector<RecordType> searchByRanges(KeyType begin, KeyType end) {
+    if (begin > end) {
+        std::swap(begin, end);
+    }
+
+    RecordType current = this->searchInOrderedRecords(begin);
+
+    if (current.prev != -1) {
+        if (current.ID > begin) {
+            current = this->getPrevRecord(current);
+        }
+    }
+
+    std::vector<RecordType> searchResult;
+
+    while (true) {
+        if (current.ID >= begin && current.ID <= end) {
+            searchResult.push_back(current);
+        }
+        if (current.ID > end || current.next == -2) {
+            return searchResult;
+        }
+        current = this->read(this->sequentialFileName, current.next);
+    }
+}
+```
 
 ### Inserción
 
@@ -70,6 +129,34 @@ Primero se realiza una búsqueda binaria sobre los registros ordenados para hall
 - Insertar cuando el registro base apunta a otro registro de la sección ordenada ```void simpleInsert(RecordType record)```: Dado que el registro base no apunta a la sección de los registros no ordenados, basta con insertar el registro a insertar en la sección no ordenada.
 - Insertar entre registros no ordenados ```void insertBetweenUnorderedRecords```: En caso el registro base apunte a un registro de la sección no ordenada, se debe encontrar la posición adecuada en la cual insertar para poder actualizar correctamente los punteros. Finalmente, se añade el registro en la sección no ordenada.
 
+```
+void insert(RecordType toInsert) {
+    RecordType baseRecord = this->searchInOrderedRecords(toInsert.ID);
+
+    if (baseRecord.ID == toInsert.ID) {
+        throw std::out_of_range("User attempted to insert an already existing ID");
+    }
+
+    if (baseRecord.prev == -1 && toInsert.ID < baseRecord.ID) { // insert at the beginning
+        this->insertAtFirstPosition(toInsert);
+    } else if (baseRecord.next == -2) { // insert at last position
+        this->insertAtLastPosition(toInsert);
+    } else { 
+        if (baseRecord.ID > toInsert.ID) {
+            baseRecord = this->getPrevRecord(baseRecord);
+        }
+        if (baseRecord.next < totalOrderedRecords) {
+            this->simpleInsert(baseRecord, toInsert); // when it's not necessary to insert "between" unordered registers
+        } else { // when baseRecord points to unordered records
+            this->insertBetweenUnorderedRecords(baseRecord, toInsert);
+        }
+    }
+    if (++totalUnorderedRecords == 5) {
+        this->rebuildAfterInsert();
+    }
+}
+```
+
 **NOTAS**: 
 - Al insertar se actualizan los punteros de los registros en O(1) de modo que para cualquier registro R, el registro de la posición ```R.next``` es estrictamente mayor que R, y el registro de la posición ```R.prev``` es estrictamente menor que R.
 - Una vez hay 5 registros en la sección no ordenada, se reconstruye el archivo.
@@ -79,6 +166,28 @@ Primero se realiza una búsqueda binaria sobre los registros ordenados para hall
 El método de eliminación es ```void deleteRecord(KeyType ID)```.
 
 Primero se busca en todo el archivo el registro a eliminar. Una vez se encuentra, se obtiene su posición lógica. Luego, se llama al método ```void updatePointersDelete(RecordType toDelete, KeyType toDeleteLogPos)``` para actualizar los punteros de ```toDelete.prev``` y ```toDelete.next```. Luego se evalúa si el registro se encuentra en la sección ordenada o no ordenada. En caso el registro a eliminar se encuentre en la sección ordenada, se borra el registro y se reconstruye el archivo, debido a que aquella eliminación arruina la búsqueda binaria en la sección ordenada usando el método privado ```void deleteOrderedRecord(KeyType toDeleteLogPos)```. En caso el registro a eliminar se encuentre en la sección no ordenada, se utiliza un free list LIFO para manejar la eliminación ```void deleteUnorederedRecord(toDeleteLogPos)```.
+
+```
+void deleteRecord(KeyType ID) {
+    RecordType toDelete = this->search(ID);
+
+    if (toDelete.ID != ID) {
+        throw std::out_of_range("Record with ID " + std::to_string(ID) + " not found.");
+    }
+
+    long toDeleteLogPos = this->getLogicalPosition(toDelete);
+
+    this->updatePointersDelete(toDelete, toDeleteLogPos);
+
+    if (toDeleteLogPos < totalOrderedRecords) {
+        this->deleteOrderedRecord(toDeleteLogPos);
+        --totalOrderedRecords;
+    } else {
+        this->deleteUnorderedRecord(toDeleteLogPos);
+        --totalUnorderedRecords;
+    }
+}
+```
 
 ## Extendible Hashing
 
@@ -280,6 +389,70 @@ De tal forma, lo que determina el costo de la eliminación es el Merge de los bu
 
 Por ende, se concluye que la eliminación ocurre en O(n).
 
+# Transacciones
+
+Realizamos una simulación concurrente implementada en C++. Utilizamos la librería pthread (POSIX) y pthread_mutex para controlar los accesos a recursos compartidos. 
+
+Iniciamos dicha implementación creando 2 threads para insertar 2 registros en nuestra base de datos. En dicha operación, debemos usar mutex locks dado que estamos modificando punteros y posiciones de memoria.
+
+```
+void* fthread_write(void *t)
+{
+  pthread_mutex_lock(&lockMutex);
+  teamsSequentialFile.insert(*((struct Team<long>*)t));
+  pthread_mutex_unlock(&lockMutex);
+  return NULL;
+}
+
+void* fthread_read(void *t)
+{
+  pthread_mutex_lock(&lockMutex);
+  Team<long> temp = teamsSequentialFile.search(*((long*)t));
+  pthread_mutex_unlock(&lockMutex);
+  responses.push_back(temp);
+  return NULL;
+}
+```
+
+Es necesario usar un mutex en read y write, debido a que hay errores si una thread intenta leer un registro mientras que otra thread mueve los punteros cuando desea escribir un registro. Es por ello, que nuestra transacción es concurrente, no paralela.
+
+Se puede observar la implementación de las dos thread en el código abajo.
+
+```
+  pthread_t thread_write,thread_write2, thread_read[N_TO_READ];
+
+  Team<long>* team1 = new Team<long>(99, "Jesus", 1, 1, 1, 1, 1, 1, 1, 1, 1);
+  Team<long>* team2 = new Team<long>(100, "Pedro", 1, 1, 1, 1, 1, 1, 1, 1, 1);
+
+
+  pthread_create(&thread_write, NULL, fthread_write, (void *)team1);
+  pthread_create(&thread_write2, NULL, fthread_write, (void *)team2);
+
+  pthread_join(thread_write,  NULL);
+  pthread_join(thread_write2,  NULL);
+```
+
+Luego, realizamos una transacción concurrente para leer distintos registros e imprimirlos en pantalla.
+
+```
+for (size_t i = 0; i < N_TO_READ; i++)
+{
+pthread_create(&thread_read[i], NULL, fthread_read, (void *)&idToSearch[i]);
+}
+
+for (size_t i = 0; i < N_TO_READ; i++)
+{
+pthread_join(thread_read[i],NULL);
+}
+
+for(auto& response : responses) {
+    response.shortPrint();
+    cout << "\n";
+}
+```
+
+Ambas transacciones finalizan con éxito y realizan su labor correctamente.
+
 # Resultados Experimentales
 
 Los tiempo de ejecución estan medidos en microsegundos (ms) y los accesos a disco hacen referencia a las operaciones read y write sobre el disco duro. Las líneas naranja hacen referencia a la cantidad de registros almacenados en la estructura, mientras que los puntos azules hacen referencia al tiempo y accesos a disco respectivamente.
@@ -381,6 +554,4 @@ La cantidad de lecturas a disco del remove tiene picos altos, que ocurren cuando
 
 # Pruebas de uso y presentación
 
-- Presentar las pruebas de uso de la aplicación.
-- Muestre la funcionalidad del aplicativo mediante un video (deben participar todos los
-miembros del grupo).
+Link del vídeo: 
