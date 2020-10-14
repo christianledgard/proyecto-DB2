@@ -298,7 +298,7 @@ En teoría, el tiempo de búsqueda es ```O(log(n) + m)```. Sin embargo, se puede
 
 ![Alt_text](https://i.ibb.co/gtxyp5S/disk-access-search.jpg)
 
-Se puede observar que los accesos a disco se mantienen en ```O(1)``` sin importar la cantidad de registros.
+Se puede observar que los accesos a disco aparentan ser ```O(1)``` sin importar la cantidad de registros. Sin embargo, en teoría deberían ser ```O(log(n) + m)```.
 
 ### Insert
 
@@ -312,7 +312,7 @@ En la gráfica se pueden observar los tiempos de inserción sin reconstrucción 
 
 ![Alt_text](https://i.ibb.co/vQKzYJb/disk-access-insert.jpg)
 
-En la gráfica se pueden observar los accesos a disco de inserción sin reconstrucción y de inserción con reconstrucción. Los accesos a disco en la inserción con reconstrucción tiene una complejidad de ```O(n)```, debido a que se tienen que leer y volver a escribir todos los registros del archivo. Los accesos a disco en la inserción sin reconstrucción tiene una complejidad de ```O(log(n) + m)```, sin embargo en la gráfica aparente ser ```O(1)```.
+En la gráfica se pueden observar los accesos a disco de inserción sin reconstrucción y de inserción con reconstrucción. Los accesos a disco en la inserción con reconstrucción tienen una complejidad de ```O(n)```, debido a que se tienen que leer y volver a escribir todos los registros del archivo. Los accesos a disco en la inserción sin reconstrucción tiene una complejidad de ```O(log(n) + m)```, sin embargo en la gráfica aparente ser ```O(1)```.
 
 ### Remove
 
@@ -322,7 +322,7 @@ En la gráfica se pueden observar los accesos a disco de inserción sin reconstr
 
 En la gráfica se puede observar la complejidad de tiempo para los dos casos de borrado. 
 
-El primero, es cuando se borra un registro de la zona ordenada del archivo. En este caso, se tiene que reconstruir el archivo, y por lo que esta operación toma ```O(n)```. Se puede observar cómo va disminuyendo la complejidad de tiempo a medida que disminuye la cantidad de registros en el Sequential File.
+El primero, es cuando se borra un registro de la zona ordenada del archivo. En este caso, se tiene que reconstruir el archivo, por lo que esta operación toma ```O(n)```. Se puede observar cómo va disminuyendo la complejidad de tiempo a medida que disminuye la cantidad de registros en el Sequential File.
 
 El segundo caso, es cuando se borra un registro de la zona no ordenada. En este caso, se usa el free list implementado. Este caso de borrado toma ```O(log(n) + m)```. Se puede observar que sin importar la cantidad de registros en el archivo, el tiempo que toma este caso de eliminado se mantiene bajo los 10ms.
 
@@ -330,11 +330,11 @@ El segundo caso, es cuando se borra un registro de la zona no ordenada. En este 
 
 ![Alt_text](https://i.ibb.co/pWcxQGT/disk-access-remove.jpg)
 
-En la gráfica se pueden observar los accesos a disco en para los dos casos de borrado.
+En la gráfica se pueden observar los accesos a disco para los dos casos de borrado.
 
 El primero, es cuando se borra un registro de la zona ordenada del archivo. En este caso, se tiene que reconstruir el archivo, y dado que se tiene que leer y escribir cada registro del archivo, los accesos a disco toman ```O(n)```. Se puede observar cómo van disminuyendo los accesos a disco a medida que disminuye la cantidad de registros en el Sequential File.
 
-El segundo caso, es cuando se borra un registro de la zona no ordenada. En este caso, se usa el free list implementado. Este caso de borrado los accesos a disco toman ```O(log(n) + m)```. Sin embargo, en la gráfica se puede observar los accesos a disco aparentan ser constantes.
+El segundo caso, es cuando se borra un registro de la zona no ordenada. En este caso, se usa el free list implementado. Este caso de borrado los accesos a disco toman ```O(log(n) + m)```. Sin embargo, en la gráfica se puede observar que los accesos a disco aparentan ser constantes.
 
 ## Hashing
 
